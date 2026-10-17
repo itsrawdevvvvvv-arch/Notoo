@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:image_picker/image_picker.dart';
@@ -180,32 +179,6 @@ class _EditorScreenState extends State<EditorScreen> {
     }
   }
 
-  Future<void> _pickFile() async {
-    try {
-      final res = await FilePicker.platform.pickFiles();
-      final file = res?.files.single;
-      if (file == null || file.path == null) return;
-      final lower = file.name.toLowerCase();
-      final isImage = lower.endsWith('.png') ||
-          lower.endsWith('.jpg') ||
-          lower.endsWith('.jpeg') ||
-          lower.endsWith('.gif') ||
-          lower.endsWith('.webp');
-      if (isImage) {
-        final saved = await _persist(file.path!);
-        if (saved != null) {
-          _insertEmbed(saved);
-        } else {
-          _toast('Could not save that file.');
-        }
-      } else {
-        _insertText('${file.name}  ');
-      }
-    } catch (e) {
-      _toast('Could not attach file: $e');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -285,7 +258,6 @@ class _EditorScreenState extends State<EditorScreen> {
                   onSticker: _insertSticker,
                   onImage: () => _pickImage(ImageSource.gallery),
                   onCamera: () => _pickImage(ImageSource.camera),
-                  onFile: _pickFile,
                   onMore: _showFormatSheet,
                 ),
               Divider(height: 1, color: onPaper.withValues(alpha: 0.12)),
@@ -692,7 +664,6 @@ class _MinimalToolbar extends StatelessWidget {
     required this.onSticker,
     required this.onImage,
     required this.onCamera,
-    required this.onFile,
     required this.onMore,
   });
 
@@ -700,7 +671,6 @@ class _MinimalToolbar extends StatelessWidget {
   final VoidCallback onSticker;
   final VoidCallback onImage;
   final VoidCallback onCamera;
-  final VoidCallback onFile;
   final VoidCallback onMore;
 
   @override
@@ -757,7 +727,6 @@ class _MinimalToolbar extends StatelessWidget {
               _sep(theme),
               btn(Icons.image_outlined, onTap: onImage),
               btn(Icons.photo_camera_outlined, onTap: onCamera),
-              btn(Icons.attach_file, onTap: onFile),
               btn(Icons.emoji_emotions_outlined, onTap: onSticker),
               btn(Icons.more_horiz, onTap: onMore),
             ],

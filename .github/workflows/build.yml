@@ -48,17 +48,6 @@ jobs:
           sed -i 's/compileSdkVersion flutter.compileSdkVersion/compileSdkVersion 36/' "$FILE" || true
           grep -nE "minSdk|compileSdk" "$FILE" || true
 
-      - name: Force compileSdk 36 for all subprojects
-        run: |
-          if [ -f android/build.gradle.kts ]; then
-            cat tool/gradle_snippet.kts >> android/build.gradle.kts
-          fi
-          if [ -f android/build.gradle ]; then
-            cat tool/gradle_snippet.gradle >> android/build.gradle
-          fi
-          echo '--- root build file tail ---'
-          tail -n 24 android/build.gradle.kts 2>/dev/null || tail -n 24 android/build.gradle || true
-
       - name: Disable Impeller (fix black screen on some GPUs)
         run: |
           MF=android/app/src/main/AndroidManifest.xml
