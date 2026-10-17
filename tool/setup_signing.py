@@ -42,12 +42,13 @@ def patch(path: str, kts: bool) -> None:
 
     entry = RELEASE_ENTRY_KTS if kts else RELEASE_ENTRY_GROOVY
 
-    if "signingConfigs" in src:
-        idx = src.find("signingConfigs")
+    # Only treat it as an existing block if the literal `signingConfigs {`
+    # appears (the template has none; `signingConfigs.getByName(...)` in
+    # buildTypes must NOT match).
+    marker = "signingConfigs {"
+    if marker in src:
+        idx = src.find(marker)
         brace = src.find("{", idx)
-        if brace == -1:
-            print("no signingConfigs brace")
-            return
         src = src[:brace + 1] + "\n" + entry + src[brace + 1:]
     else:
         idx = src.find("android {")

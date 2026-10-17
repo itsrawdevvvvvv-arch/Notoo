@@ -26,3 +26,7 @@ assets/fonts/
 
 # Stickers are fetched at build time by tool/fetch_stickers.py
 assets/stickers/
+
+# Python bytecode
+__pycache__/
+*.pyc
