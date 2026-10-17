@@ -33,22 +33,24 @@ jobs:
       - name: Show Flutter version
         run: flutter --version
 
+      - name: Generate Android platform files
+        run: |
+          flutter create --platforms=android --org com.notoo --project-name notoo /tmp/notoo_scaffold
+          cp -r /tmp/notoo_scaffold/android ./android
+
       - name: Install stable signing key
         env:
           KEYSTORE_B64: ${{ secrets.NOTOO_KEYSTORE_B64 }}
         run: |
           if [ -n "$KEYSTORE_B64" ]; then
-            mkdir -p "$HOME/.android"
-            printf '%s' "$KEYSTORE_B64" | base64 -d > "$HOME/.android/debug.keystore"
-            echo "Installed stable signing keystore."
+            printf '%s' "$KEYSTORE_B64" | base64 -d > android/app/notoo.p12
+            echo "Wrote release keystore ($(wc -c < android/app/notoo.p12) bytes)."
           else
             echo "WARNING: no NOTOO_KEYSTORE_B64 secret; signature will not be stable."
           fi
 
-      - name: Generate Android platform files
-        run: |
-          flutter create --platforms=android --org com.notoo --project-name notoo /tmp/notoo_scaffold
-          cp -r /tmp/notoo_scaffold/android ./android
+      - name: Patch Gradle release signing
+        run: python3 tool/setup_signing.py
 
       - name: Set minSdk 28 and compileSdk 36
         run: |
