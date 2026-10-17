@@ -1,7 +1,7 @@
 name: notoo
 description: "Notoo - a warm, editorial notes app for Android 9+. Rich text notes, folders, tags, stickers, PDF/txt export, and deep customisation."
 publish_to: 'none'
-version: 1.2.3+10
+version: 1.2.4+11
 
 environment:
   sdk: '>=3.5.0 <4.0.0'
