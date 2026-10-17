@@ -50,7 +50,10 @@ jobs:
           fi
 
       - name: Patch Gradle release signing
-        run: python3 tool/setup_signing.py
+        run: |
+          echo '--- original app build file ---'
+          cat android/app/build.gradle.kts 2>/dev/null || cat android/app/build.gradle || true
+          python3 tool/setup_signing.py
 
       - name: Set minSdk 28 and compileSdk 36
         run: |

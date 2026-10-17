@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Wire Notoo's stable release signing key into the generated Android project.
 
-The CI writes the keystore to android/app/notoo.p12 first; this script then
-adds a `release` signing config to app/build.gradle(.kts) and points the
+CI writes the keystore to android/app/notoo.p12 first; this script then adds a
+`release` signing config inside the `android { ... }` block and points the
 release build type at it. Run after `flutter create` has produced android/.
 """
 import os
@@ -13,7 +13,8 @@ APP_DIR = os.path.join(ROOT, "android", "app")
 KTS = os.path.join(APP_DIR, "build.gradle.kts")
 GROOVY = os.path.join(APP_DIR, "build.gradle")
 
-RELEASE_CFG_KTS = """        create("release") {
+# Entries that go *inside* signingConfigs { ... }
+RELEASE_ENTRY_KTS = """        create("release") {
             storeFile = file("notoo.p12")
             storeType = "PKCS12"
             storePassword = "android"
@@ -22,7 +23,7 @@ RELEASE_CFG_KTS = """        create("release") {
         }
 """
 
-RELEASE_CFG_GROOVY = """        release {
+RELEASE_ENTRY_GROOVY = """        release {
             storeFile file("notoo.p12")
             storeType "PKCS12"
             storePassword "android"
@@ -39,40 +40,45 @@ def patch(path: str, kts: bool) -> None:
     with open(path, "r", encoding="utf-8") as f:
         src = f.read()
 
-    cfg = RELEASE_CFG_KTS if kts else RELEASE_CFG_GROOVY
+    entry = RELEASE_ENTRY_KTS if kts else RELEASE_ENTRY_GROOVY
 
     if "signingConfigs" in src:
         idx = src.find("signingConfigs")
         brace = src.find("{", idx)
-        nl = src.find("\n", brace)
-        src = src[:nl + 1] + cfg + src[nl + 1:]
+        if brace == -1:
+            print("no signingConfigs brace")
+            return
+        src = src[:brace + 1] + "\n" + entry + src[brace + 1:]
     else:
         idx = src.find("android {")
         if idx == -1:
             print("no android block in", path)
             return
-        nl = src.find("\n", idx)
-        block = ("    signingConfigs {\n" + cfg + "    }\n\n")
-        src = src[:nl + 1] + block + src[nl + 1:]
+        brace = src.find("{", idx)
+        block = "\n    signingConfigs {\n" + entry + "    }\n"
+        src = src[:brace + 1] + block + src[brace + 1:]
 
     if kts:
-        src = src.replace(
-            'signingConfig = signingConfigs.getByName("debug")',
-            'signingConfig = signingConfigs.getByName("release")')
+        src = src.replace('signingConfigs.getByName("debug")',
+                          'signingConfigs.getByName("release")')
     else:
-        src = src.replace(
-            "signingConfig signingConfigs.debug",
-            "signingConfig signingConfigs.release")
+        src = src.replace("signingConfig signingConfigs.debug",
+                          "signingConfig signingConfigs.release")
 
     with open(path, "w", encoding="utf-8") as f:
         f.write(src)
-    print("patched signing in", path)
+
+    print("===== patched", path, "=====")
+    for i, line in enumerate(src.splitlines(), 1):
+        if 1 <= i <= 60:
+            print(f"{i:>3} | {line}")
+    print("===== end =====")
 
 
 def main() -> None:
     if os.path.exists(KTS):
         patch(KTS, True)
-    if os.path.exists(GROOVY):
+    elif os.path.exists(GROOVY):
         patch(GROOVY, False)
 
 
