@@ -5,6 +5,7 @@ import '../data/notes_store.dart';
 import '../models/note_folder.dart';
 import '../theme/app_colors.dart';
 import '../widgets/empty_state.dart';
+import '../widgets/motion.dart';
 import 'folder_notes_screen.dart';
 
 class FoldersScreen extends StatelessWidget {
@@ -35,15 +36,18 @@ class FoldersScreen extends StatelessWidget {
                     separatorBuilder: (_, __) => const SizedBox(height: 10),
                     itemBuilder: (_, i) {
                       final f = store.folders[i];
-                      return _FolderTile(
-                        folder: f,
-                        count: store.notesInFolder(f.id),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => FolderNotesScreen(folder: f),
+                      return RiseIn(
+                        index: i,
+                        child: _FolderTile(
+                          folder: f,
+                          count: store.notesInFolder(f.id),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => FolderNotesScreen(folder: f),
+                            ),
                           ),
+                          onLongPress: () => _folderMenu(context, f),
                         ),
-                        onLongPress: () => _folderMenu(context, f),
                       );
                     },
                   ),
@@ -176,12 +180,16 @@ class _FolderTile extends StatelessWidget {
                         style: const TextStyle(
                             fontWeight: FontWeight.w700, fontSize: 15)),
                     Text('$count notes',
-                        style: const TextStyle(
-                            fontSize: 12, color: AppColors.inkSoft)),
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant)),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppColors.inkSoft),
+              Icon(Icons.chevron_right,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
             ],
           ),
         ),

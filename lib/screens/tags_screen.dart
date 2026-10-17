@@ -5,6 +5,7 @@ import '../data/notes_store.dart';
 import '../models/note_tag.dart';
 import '../theme/app_colors.dart';
 import '../widgets/empty_state.dart';
+import '../widgets/motion.dart';
 
 class TagsScreen extends StatelessWidget {
   const TagsScreen({super.key});
@@ -44,28 +45,33 @@ class TagsScreen extends StatelessWidget {
                     separatorBuilder: (_, __) => const SizedBox(height: 10),
                     itemBuilder: (_, i) {
                       final t = store.tags[i];
-                      return Material(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(16),
-                        child: ListTile(
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16)),
-                          leading: Container(
-                            width: 16,
-                            height: 16,
-                            decoration: BoxDecoration(
-                              color: AppColors.pastel(t.colorIndex),
-                              shape: BoxShape.circle,
+                      return RiseIn(
+                        index: i,
+                        child: Material(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          child: ListTile(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16)),
+                            leading: Container(
+                              width: 16,
+                              height: 16,
+                              decoration: BoxDecoration(
+                                color: AppColors.pastel(t.colorIndex),
+                                shape: BoxShape.circle,
+                              ),
                             ),
+                            title: Text(t.name,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w700)),
+                            trailing: Text('${store.notesWithTag(t.id)}',
+                                style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                    fontWeight: FontWeight.w600)),
+                            onLongPress: () => _tagMenu(context, t),
                           ),
-                          title: Text(t.name,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w700)),
-                          trailing: Text('${store.notesWithTag(t.id)}',
-                              style: const TextStyle(
-                                  color: AppColors.inkSoft,
-                                  fontWeight: FontWeight.w600)),
-                          onLongPress: () => _tagMenu(context, t),
                         ),
                       );
                     },

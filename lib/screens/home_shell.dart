@@ -6,8 +6,8 @@ import 'archive_screen.dart';
 import 'editor_screen.dart';
 import 'folders_screen.dart';
 import 'home_screen.dart';
+import 'settings_screen.dart';
 import 'tags_screen.dart';
-import 'trash_screen.dart';
 
 /// Bottom-navigation shell holding the five primary destinations.
 class HomeShell extends StatefulWidget {
@@ -25,7 +25,7 @@ class _HomeShellState extends State<HomeShell> {
     FoldersScreen(),
     TagsScreen(),
     ArchiveScreen(),
-    TrashScreen(),
+    SettingsScreen(),
   ];
 
   Future<void> _newNote() async {
@@ -40,7 +40,25 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _index, children: _screens),
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 260),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.015),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          ),
+        ),
+        child: KeyedSubtree(
+          key: ValueKey<int>(_index),
+          child: _screens[_index],
+        ),
+      ),
       floatingActionButton: _index == 0
           ? FloatingActionButton(
               onPressed: _newNote,
@@ -69,9 +87,9 @@ class _HomeShellState extends State<HomeShell> {
               selectedIcon: Icon(Icons.inventory_2),
               label: 'Archive'),
           NavigationDestination(
-              icon: Icon(Icons.delete_outline),
-              selectedIcon: Icon(Icons.delete),
-              label: 'Trash'),
+              icon: Icon(Icons.settings_outlined),
+              selectedIcon: Icon(Icons.settings),
+              label: 'Settings'),
         ],
       ),
     );

@@ -52,6 +52,9 @@ jobs:
           sed -i 's#</application>#        <meta-data android:name="io.flutter.embedding.android.EnableImpeller" android:value="false" />\n    </application>#' "$MF" || true
           grep -n "Impeller" "$MF" || true
 
+      - name: Fetch bundled fonts
+        run: python3 tool/fetch_fonts.py
+
       - name: Install dependencies
         run: flutter pub get
 

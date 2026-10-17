@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../data/notes_store.dart';
-import '../theme/app_colors.dart';
 import '../widgets/empty_state.dart';
+import '../widgets/motion.dart';
 import '../widgets/note_card.dart';
 import 'editor_screen.dart';
 
@@ -18,13 +18,14 @@ class ArchiveScreen extends StatelessWidget {
     return SafeArea(
       child: Column(
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Row(
               children: [
-                Icon(Icons.inventory_2_outlined, color: AppColors.greenDeep),
-                SizedBox(width: 10),
-                Text('Archive',
+                Icon(Icons.inventory_2_outlined,
+                    color: Theme.of(context).colorScheme.primary),
+                const SizedBox(width: 10),
+                const Text('Archive',
                     style: TextStyle(
                         fontSize: 24, fontWeight: FontWeight.w800)),
               ],
@@ -41,15 +42,18 @@ class ArchiveScreen extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
                     itemCount: notes.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (_, i) => NoteCard(
-                      note: notes[i],
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (_) => EditorScreen(note: notes[i])),
-                      ),
-                      trailing: TextButton(
-                        onPressed: () => store.toggleArchive(notes[i]),
-                        child: const Text('Unarchive'),
+                    itemBuilder: (_, i) => RiseIn(
+                      index: i,
+                      child: NoteCard(
+                        note: notes[i],
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                              builder: (_) => EditorScreen(note: notes[i])),
+                        ),
+                        trailing: TextButton(
+                          onPressed: () => store.toggleArchive(notes[i]),
+                          child: const Text('Unarchive'),
+                        ),
                       ),
                     ),
                   ),

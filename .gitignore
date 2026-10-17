@@ -20,3 +20,6 @@ android/key.properties
 # Misc
 .DS_Store
 *.log
+
+# Fonts are fetched at build time by tool/fetch_fonts.py
+assets/fonts/

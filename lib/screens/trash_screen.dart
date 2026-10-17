@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../data/notes_store.dart';
-import '../theme/app_colors.dart';
 import '../widgets/empty_state.dart';
+import '../widgets/motion.dart';
 import '../widgets/note_card.dart';
 import 'editor_screen.dart';
 
+/// Trash — opened from Settings (no longer a bottom-bar tab).
 class TrashScreen extends StatelessWidget {
   const TrashScreen({super.key});
 
@@ -15,54 +16,43 @@ class TrashScreen extends StatelessWidget {
     final store = context.watch<NotesStore>();
     final notes = store.trashed;
 
-    return SafeArea(
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 8, 8),
-            child: Row(
-              children: [
-                const Icon(Icons.delete_outline, color: AppColors.greenDeep),
-                const SizedBox(width: 10),
-                const Text('Trash',
-                    style: TextStyle(
-                        fontSize: 24, fontWeight: FontWeight.w800)),
-                const Spacer(),
-                if (notes.isNotEmpty)
-                  TextButton(
-                    onPressed: () => _confirmEmpty(context),
-                    child: const Text('Empty trash'),
-                  ),
-              ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Trash'),
+        actions: [
+          if (notes.isNotEmpty)
+            TextButton(
+              onPressed: () => _confirmEmpty(context),
+              child: const Text('Empty trash'),
             ),
-          ),
-          Expanded(
-            child: notes.isEmpty
-                ? const EmptyState(
-                    icon: Icons.delete_outline,
-                    title: 'Trash is empty',
-                    subtitle: 'Deleted notes stay here until you remove them.',
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
-                    itemCount: notes.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (_, i) => NoteCard(
-                      note: notes[i],
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (_) =>
-                                EditorScreen(note: notes[i], readOnly: true)),
-                      ),
-                      trailing: TextButton(
-                        onPressed: () => store.restoreNote(notes[i]),
-                        child: const Text('Restore'),
-                      ),
-                    ),
-                  ),
-          ),
         ],
       ),
+      body: notes.isEmpty
+          ? const EmptyState(
+              icon: Icons.delete_outline,
+              title: 'Trash is empty',
+              subtitle: 'Deleted notes stay here until you remove them.',
+            )
+          : ListView.separated(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              itemCount: notes.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (_, i) => RiseIn(
+                index: i,
+                child: NoteCard(
+                  note: notes[i],
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) =>
+                            EditorScreen(note: notes[i], readOnly: true)),
+                  ),
+                  trailing: TextButton(
+                    onPressed: () => store.restoreNote(notes[i]),
+                    child: const Text('Restore'),
+                  ),
+                ),
+              ),
+            ),
     );
   }
 

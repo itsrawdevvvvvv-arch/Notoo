@@ -4,12 +4,11 @@ import 'package:provider/provider.dart';
 import '../data/notes_store.dart';
 import '../data/settings_store.dart';
 import '../models/note.dart';
-import '../theme/app_colors.dart';
 import '../widgets/empty_state.dart';
+import '../widgets/motion.dart';
 import '../widgets/note_card.dart';
 import 'editor_screen.dart';
 import 'search_screen.dart';
-import 'settings_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -39,14 +38,12 @@ class HomeScreen extends StatelessWidget {
                     children: [
                       if (pinned.isNotEmpty) ...[
                         const _SectionLabel('Pinned'),
-                        _NotesBlock(
-                            notes: pinned, isGrid: isGrid, store: store),
+                        _NotesBlock(notes: pinned, isGrid: isGrid),
                         const SizedBox(height: 18),
                       ],
                       if (recent.isNotEmpty) ...[
                         const _SectionLabel('Recent Notes'),
-                        _NotesBlock(
-                            notes: recent, isGrid: isGrid, store: store),
+                        _NotesBlock(notes: recent, isGrid: isGrid),
                       ],
                     ],
                   ),
@@ -63,6 +60,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final isGrid = settings.viewMode == ViewMode.grid;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
@@ -71,21 +69,21 @@ class _Header extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Notoo',
-                    style: TextStyle(
-                      fontSize: 30,
+                    style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w800,
-                      color: AppColors.ink,
                       letterSpacing: -0.5,
                     ),
                   ),
                   Text(
                     'Good ideas live here.',
-                    style: TextStyle(fontSize: 12.5, color: AppColors.inkSoft),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -96,10 +94,6 @@ class _Header extends StatelessWidget {
                   MaterialPageRoute(builder: (_) => const SearchScreen()),
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.more_vert),
-                onPressed: () => _showOverflow(context),
-              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -109,69 +103,32 @@ class _Header extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 decoration: BoxDecoration(
-                  color: AppColors.green.withValues(alpha: 0.12),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
                     Icon(Icons.grid_view_rounded,
-                        size: 15, color: AppColors.greenDeep),
-                    SizedBox(width: 6),
+                        size: 15, color: theme.colorScheme.primary),
+                    const SizedBox(width: 6),
                     Text('All Notes',
                         style: TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.greenDeep)),
+                            color: theme.colorScheme.primary)),
                   ],
                 ),
               ),
               const Spacer(),
               _ViewToggle(
                 isGrid: isGrid,
-                onChanged: (g) => settings.setViewMode(
-                    g ? ViewMode.grid : ViewMode.list),
+                onChanged: (g) =>
+                    settings.setViewMode(g ? ViewMode.grid : ViewMode.list),
               ),
             ],
           ),
         ],
       ),
-    );
-  }
-
-  void _showOverflow(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (_) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.download_outlined),
-              title: const Text('Export all notes'),
-              onTap: () {
-                Navigator.pop(context);
-                _exportAll(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings_outlined),
-              title: const Text('Settings'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _exportAll(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Use Settings → Export & backup')),
     );
   }
 }
@@ -183,30 +140,34 @@ class _ViewToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.green.withValues(alpha: 0.10),
+        color: theme.colorScheme.primary.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _btn(Icons.grid_view_rounded, isGrid, () => onChanged(true)),
-          _btn(Icons.view_agenda_outlined, !isGrid, () => onChanged(false)),
+          _btn(theme, Icons.grid_view_rounded, isGrid, () => onChanged(true)),
+          _btn(theme, Icons.view_agenda_outlined, !isGrid, () => onChanged(false)),
         ],
       ),
     );
   }
 
-  Widget _btn(IconData icon, bool active, VoidCallback onTap) {
+  Widget _btn(ThemeData theme, IconData icon, bool active, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
-      child: Padding(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.all(7),
         child: Icon(icon,
             size: 18,
-            color: active ? AppColors.greenDeep : AppColors.inkSoft),
+            color: active
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant),
       ),
     );
   }
@@ -222,10 +183,10 @@ class _SectionLabel extends StatelessWidget {
       padding: const EdgeInsets.only(left: 2, bottom: 10, top: 6),
       child: Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w700,
-          color: AppColors.inkSoft,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
           letterSpacing: 0.3,
         ),
       ),
@@ -234,15 +195,10 @@ class _SectionLabel extends StatelessWidget {
 }
 
 class _NotesBlock extends StatelessWidget {
-  const _NotesBlock({
-    required this.notes,
-    required this.isGrid,
-    required this.store,
-  });
+  const _NotesBlock({required this.notes, required this.isGrid});
 
   final List<Note> notes;
   final bool isGrid;
-  final NotesStore store;
 
   @override
   Widget build(BuildContext context) {
@@ -257,15 +213,16 @@ class _NotesBlock extends StatelessWidget {
           crossAxisSpacing: 12,
           childAspectRatio: 0.82,
         ),
-        itemBuilder: (_, i) => _card(context, notes[i]),
+        itemBuilder: (_, i) =>
+            RiseIn(index: i, child: _card(context, notes[i])),
       );
     }
     return Column(
       children: [
-        for (final n in notes)
+        for (var i = 0; i < notes.length; i++)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: _card(context, n),
+            child: RiseIn(index: i, child: _card(context, notes[i])),
           ),
       ],
     );

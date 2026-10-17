@@ -9,6 +9,7 @@ import '../data/settings_store.dart';
 import '../models/note.dart';
 import '../services/export_service.dart';
 import '../theme/app_colors.dart';
+import '../widgets/sticker_picker.dart';
 
 /// The note editor — the heart of Notoo.
 ///
@@ -54,8 +55,7 @@ class _EditorScreenState extends State<EditorScreen> {
         return Document.fromJson(_note.deltaJson);
       }
     } catch (_) {
-      // Corrupt or legacy content — fall back to a clean document rather
-      // than crashing the editor.
+      // Corrupt or legacy content — fall back to a clean document.
     }
     return Document();
   }
@@ -82,7 +82,7 @@ class _EditorScreenState extends State<EditorScreen> {
     _note.title = _titleController.text;
     _note.deltaJson = _controller.document.toDelta().toJson();
     _note.plainText = _controller.document.toPlainText();
-    if (_isEmpty) return; // don't persist blank notes
+    if (_isEmpty) return;
     await _store.updateNote(_note);
   }
 
@@ -94,7 +94,7 @@ class _EditorScreenState extends State<EditorScreen> {
       _note.deltaJson = _controller.document.toDelta().toJson();
       _note.plainText = _controller.document.toPlainText();
       if (_isEmpty) {
-        _store.deleteForever(_note); // discard an untouched blank note
+        _store.deleteForever(_note);
       } else {
         _store.updateNote(_note);
       }
@@ -109,8 +109,39 @@ class _EditorScreenState extends State<EditorScreen> {
     await _store.togglePin(_note);
   }
 
+  Future<void> _insertSticker() async {
+    final sticker = await showStickerPicker(context);
+    if (sticker == null || !mounted) return;
+    final sel = _controller.selection;
+    final index =
+        sel.isValid ? sel.end : _controller.document.length - 1;
+    _controller.document.insert(index, sticker);
+    _controller.updateSelection(
+      TextSelection.collapsed(offset: index + sticker.length),
+      ChangeSource.local,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final settings = context.watch<SettingsStore>();
+
+    final paper = settings.editorPaperIndex == 0
+        ? theme.scaffoldBackgroundColor
+        : AppColors.papers[settings.editorPaperIndex];
+    final paperBrightness = ThemeData.estimateBrightnessForColor(paper);
+    final onPaper = paperBrightness == Brightness.dark
+        ? Colors.white
+        : const Color(0xFF2E2A24);
+
+    final paperTheme = theme.copyWith(
+      colorScheme: theme.colorScheme
+          .copyWith(brightness: paperBrightness, onSurface: onPaper),
+      textTheme:
+          theme.textTheme.apply(bodyColor: onPaper, displayColor: onPaper),
+    );
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -121,9 +152,8 @@ class _EditorScreenState extends State<EditorScreen> {
           if (!widget.readOnly)
             IconButton(
               tooltip: _note.isPinned ? 'Unpin' : 'Pin',
-              icon: Icon(_note.isPinned
-                  ? Icons.push_pin
-                  : Icons.push_pin_outlined),
+              icon: Icon(
+                  _note.isPinned ? Icons.push_pin : Icons.push_pin_outlined),
               onPressed: _togglePin,
             ),
           IconButton(
@@ -138,42 +168,155 @@ class _EditorScreenState extends State<EditorScreen> {
             ),
         ],
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
-            child: TextField(
-              controller: _titleController,
-              readOnly: widget.readOnly,
-              textCapitalization: TextCapitalization.sentences,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-                color: AppColors.ink,
+      body: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        color: paper,
+        child: Theme(
+          data: paperTheme,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 8, 18, 0),
+                child: TextField(
+                  controller: _titleController,
+                  readOnly: widget.readOnly,
+                  textCapitalization: TextCapitalization.sentences,
+                  style: TextStyle(
+                    fontSize: 25,
+                    fontWeight: FontWeight.w700,
+                    color: onPaper,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Title',
+                    hintStyle: TextStyle(color: onPaper.withValues(alpha: 0.4)),
+                    border: InputBorder.none,
+                    isCollapsed: true,
+                  ),
+                ),
               ),
-              decoration: const InputDecoration(
-                hintText: 'Title',
-                border: InputBorder.none,
-                isCollapsed: true,
+              if (!widget.readOnly)
+                _MinimalToolbar(
+                  controller: _controller,
+                  onSticker: _insertSticker,
+                  onMore: _showFormatSheet,
+                ),
+              Divider(
+                  height: 1,
+                  color: onPaper.withValues(alpha: 0.12)),
+              Expanded(
+                child: QuillEditor.basic(
+                  controller: _controller,
+                  config: const QuillEditorConfig(),
+                ),
               ),
-            ),
+            ],
           ),
-          if (!widget.readOnly)
-            QuillSimpleToolbar(
-              controller: _controller,
-              config: const QuillSimpleToolbarConfig(),
-            ),
-          const Divider(height: 1, color: AppColors.hairline),
-          Expanded(
-            child: QuillEditor.basic(
-              controller: _controller,
-              config: const QuillEditorConfig(),
-            ),
-          ),
-        ],
+        ),
       ),
     );
+  }
+
+  // ---------- Formatting extras ----------
+
+  void _showFormatSheet() {
+    final theme = Theme.of(context);
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 4),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text('More formatting',
+                    style: theme.textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w700)),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.format_list_numbered),
+              title: const Text('Numbered list'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _toggle(Attribute.ol);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.format_strikethrough),
+              title: const Text('Strikethrough'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _toggle(Attribute.strikeThrough);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.format_quote),
+              title: const Text('Quote'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _toggle(Attribute.blockQuote);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.code),
+              title: const Text('Code block'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _toggle(Attribute.codeBlock);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.format_clear),
+              title: const Text('Clear formatting'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _clearFormat();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _toggle(Attribute attr) {
+    final active =
+        _controller.getSelectionStyle().attributes.containsKey(attr.key);
+    _controller
+        .formatSelection(active ? Attribute.clone(attr, null) : attr);
+  }
+
+  void _setHeader(int? level) {
+    if (level == null) {
+      for (final a in [Attribute.h1, Attribute.h2, Attribute.h3]) {
+        _controller.formatSelection(Attribute.clone(a, null));
+      }
+      return;
+    }
+    _controller.formatSelection(
+      level == 1 ? Attribute.h1 : (level == 2 ? Attribute.h2 : Attribute.h3),
+    );
+  }
+
+  void _clearFormat() {
+    for (final a in [
+      Attribute.bold,
+      Attribute.italic,
+      Attribute.underline,
+      Attribute.strikeThrough,
+      Attribute.h1,
+      Attribute.h2,
+      Attribute.h3,
+      Attribute.ul,
+      Attribute.ol,
+      Attribute.blockQuote,
+      Attribute.codeBlock,
+    ]) {
+      _controller.formatSelection(Attribute.clone(a, null));
+    }
   }
 
   // ---------- Sheets ----------
@@ -192,15 +335,10 @@ class _EditorScreenState extends State<EditorScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Export what?',
+                const Text('Export this note',
                     style: TextStyle(
                         fontSize: 16, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 8),
-                const Text('This note is exported by default.',
-                    style: TextStyle(fontSize: 12, color: AppColors.inkSoft)),
-                const SizedBox(height: 12),
-                const Text('Format',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 14),
                 Row(
                   children: [
                     _fmtChip('PDF', ExportFormat.pdf, format,
@@ -215,7 +353,6 @@ class _EditorScreenState extends State<EditorScreen> {
                   width: double.infinity,
                   child: FilledButton.icon(
                     style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.green,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     icon: const Icon(Icons.download),
@@ -251,23 +388,29 @@ class _EditorScreenState extends State<EditorScreen> {
     ExportFormat current,
     ValueChanged<ExportFormat> onPick,
   ) {
+    final theme = Theme.of(context);
     final selected = value == current;
     return GestureDetector(
       onTap: () => onPick(value),
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         decoration: BoxDecoration(
           color: selected
-              ? AppColors.green.withValues(alpha: 0.15)
+              ? theme.colorScheme.primary.withValues(alpha: 0.15)
               : Colors.transparent,
           border: Border.all(
-              color: selected ? AppColors.green : AppColors.hairline),
+              color: selected
+                  ? theme.colorScheme.primary
+                  : theme.dividerColor),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(label,
             style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: selected ? AppColors.greenDeep : AppColors.inkSoft)),
+                color: selected
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurfaceVariant)),
       ),
     );
   }
@@ -280,19 +423,19 @@ class _EditorScreenState extends State<EditorScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
+              leading: const Icon(Icons.palette_outlined),
+              title: const Text('Note colour'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _showColorPicker();
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.sell_outlined),
               title: const Text('Tags'),
               onTap: () {
                 Navigator.pop(ctx);
                 _showTagPicker();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.palette_outlined),
-              title: const Text('Colour'),
-              onTap: () {
-                Navigator.pop(ctx);
-                _showColorPicker();
               },
             ),
             ListTile(
@@ -335,7 +478,7 @@ class _EditorScreenState extends State<EditorScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Colour',
+              const Text('Note colour',
                   style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
               const SizedBox(height: 14),
               Wrap(
@@ -355,6 +498,7 @@ class _EditorScreenState extends State<EditorScreen> {
   }
 
   Widget _swatch(BuildContext sheetCtx, int? index) {
+    final theme = Theme.of(context);
     final selected = _note.colorIndex == index;
     return GestureDetector(
       onTap: () async {
@@ -369,14 +513,14 @@ class _EditorScreenState extends State<EditorScreen> {
           color: index == null ? Colors.transparent : AppColors.pastel(index),
           shape: BoxShape.circle,
           border: Border.all(
-            color: selected ? AppColors.green : AppColors.hairline,
+            color: selected ? theme.colorScheme.primary : theme.dividerColor,
             width: selected ? 2.5 : 1,
           ),
         ),
         child: index == null
-            ? const Icon(Icons.block, size: 18, color: AppColors.inkSoft)
+            ? Icon(Icons.block, size: 18, color: theme.colorScheme.onSurfaceVariant)
             : (selected
-                ? const Icon(Icons.check, size: 18, color: AppColors.greenDeep)
+                ? const Icon(Icons.check, size: 18, color: AppColors.ink)
                 : null),
       ),
     );
@@ -410,8 +554,7 @@ class _EditorScreenState extends State<EditorScreen> {
                 if (all.isEmpty)
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 8),
-                    child: Text('No tags yet — create one below.',
-                        style: TextStyle(color: AppColors.inkSoft)),
+                    child: Text('No tags yet — create one below.'),
                   ),
                 for (final t in all)
                   CheckboxListTile(
@@ -439,8 +582,7 @@ class _EditorScreenState extends State<EditorScreen> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.add_circle,
-                          color: AppColors.green),
+                      icon: const Icon(Icons.add_circle),
                       onPressed: () async {
                         final name = newTagController.text.trim();
                         if (name.isEmpty) return;
@@ -455,8 +597,6 @@ class _EditorScreenState extends State<EditorScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
-                    style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.green),
                     onPressed: () async {
                       _note.tagIds = selected.toList();
                       await _store.updateNote(_note);
@@ -468,6 +608,139 @@ class _EditorScreenState extends State<EditorScreen> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A compact, single-row toolbar — deliberately minimal.
+class _MinimalToolbar extends StatelessWidget {
+  const _MinimalToolbar({
+    required this.controller,
+    required this.onSticker,
+    required this.onMore,
+  });
+
+  final QuillController controller;
+  final VoidCallback onSticker;
+  final VoidCallback onMore;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) {
+        bool active(Attribute a) =>
+            controller.getSelectionStyle().attributes.containsKey(a.key);
+        void toggle(Attribute a) {
+          controller.formatSelection(
+              active(a) ? Attribute.clone(a, null) : a);
+        }
+
+        Widget btn(IconData icon, {bool on = false, VoidCallback? onTap}) =>
+            IconButton(
+              iconSize: 20,
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              color: on ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+              icon: Icon(icon),
+              onPressed: onTap,
+            );
+
+        return SizedBox(
+          height: 46,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            children: [
+              btn(Icons.undo, onTap: controller.undo),
+              btn(Icons.redo, onTap: controller.redo),
+              _sep(theme),
+              btn(Icons.format_bold,
+                  on: active(Attribute.bold),
+                  onTap: () => toggle(Attribute.bold)),
+              btn(Icons.format_italic,
+                  on: active(Attribute.italic),
+                  onTap: () => toggle(Attribute.italic)),
+              btn(Icons.format_underlined,
+                  on: active(Attribute.underline),
+                  onTap: () => toggle(Attribute.underline)),
+              _sep(theme),
+              _HeadingMenu(controller: controller, active: active),
+              _sep(theme),
+              btn(Icons.format_list_bulleted,
+                  on: active(Attribute.ul),
+                  onTap: () => toggle(Attribute.ul)),
+              btn(Icons.checklist,
+                  on: active(Attribute.checked),
+                  onTap: () => toggle(Attribute.checked)),
+              _sep(theme),
+              btn(Icons.emoji_emotions_outlined, onTap: onSticker),
+              btn(Icons.more_horiz, onTap: onMore),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _sep(ThemeData theme) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+        child: VerticalDivider(
+            width: 1, color: theme.colorScheme.onSurface.withValues(alpha: 0.15)),
+      );
+}
+
+class _HeadingMenu extends StatelessWidget {
+  const _HeadingMenu({required this.controller, required this.active});
+
+  final QuillController controller;
+  final bool Function(Attribute) active;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final current = active(Attribute.h1)
+        ? 'H1'
+        : active(Attribute.h2)
+            ? 'H2'
+            : active(Attribute.h3)
+                ? 'H3'
+                : 'Normal';
+    return PopupMenuButton<int>(
+      tooltip: 'Text style',
+      onSelected: (level) {
+        if (level == 0) {
+          for (final a in [Attribute.h1, Attribute.h2, Attribute.h3]) {
+            controller.formatSelection(Attribute.clone(a, null));
+          }
+        } else {
+          controller.formatSelection(level == 1
+              ? Attribute.h1
+              : (level == 2 ? Attribute.h2 : Attribute.h3));
+        }
+      },
+      itemBuilder: (context) => const [
+        PopupMenuItem(value: 0, child: Text('Normal')),
+        PopupMenuItem(value: 1, child: Text('Heading 1')),
+        PopupMenuItem(value: 2, child: Text('Heading 2')),
+        PopupMenuItem(value: 3, child: Text('Heading 3')),
+      ],
+      child: Container(
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Row(
+          children: [
+            Text(current,
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface)),
+            Icon(Icons.arrow_drop_down,
+                size: 18, color: theme.colorScheme.onSurface),
+          ],
         ),
       ),
     );
