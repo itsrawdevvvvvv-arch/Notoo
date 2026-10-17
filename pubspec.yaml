@@ -1,0 +1,29 @@
+name: notoo
+description: "Notoo - a warm, editorial notes app for Android 9+. Rich text notes, folders, tags, reminders, PDF/txt export, and deep customisation."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  provider: ^6.1.2
+  shared_preferences: ^2.3.2
+  path_provider: ^2.1.4
+  intl: ^0.19.0
+  flutter_quill: ^11.6.0
+  pdf: ^3.11.1
+  share_plus: ^10.1.4
+  url_launcher: ^6.3.1
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true

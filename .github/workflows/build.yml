@@ -1,0 +1,57 @@
+name: Build Notoo APK
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build release APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Show Flutter version
+        run: flutter --version
+
+      - name: Generate Android platform files
+        run: |
+          flutter create --platforms=android --org com.notoo --project-name notoo /tmp/notoo_scaffold
+          cp -r /tmp/notoo_scaffold/android ./android
+
+      - name: Set minSdk to 28 (Android 9)
+        run: |
+          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 28/' android/app/build.gradle
+          grep -n "minSdk" android/app/build.gradle || true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze || true
+
+      - name: Build release APK
+        run: flutter build apk --release
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: notoo-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
