@@ -46,6 +46,12 @@ jobs:
           sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 28/' "$FILE" || true
           grep -n "minSdk" "$FILE" || true
 
+      - name: Disable Impeller (fix black screen on some GPUs)
+        run: |
+          MF=android/app/src/main/AndroidManifest.xml
+          sed -i 's#</application>#        <meta-data android:name="io.flutter.embedding.android.EnableImpeller" android:value="false" />\n    </application>#' "$MF" || true
+          grep -n "Impeller" "$MF" || true
+
       - name: Install dependencies
         run: flutter pub get
 
