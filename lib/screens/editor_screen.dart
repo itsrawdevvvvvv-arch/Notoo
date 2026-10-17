@@ -14,6 +14,7 @@ import '../models/note.dart';
 import '../services/export_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/patterns.dart';
+import '../widgets/selection_menu.dart';
 import '../widgets/sticker_library.dart';
 
 /// The note editor — the heart of Notoo.
@@ -264,8 +265,10 @@ class _EditorScreenState extends State<EditorScreen> {
               Expanded(
                 child: QuillEditor.basic(
                   controller: _controller,
-                  config: const QuillEditorConfig(
-                    embedBuilders: [NotooImageEmbedBuilder()],
+                  config: QuillEditorConfig(
+                    embedBuilders: const [NotooImageEmbedBuilder()],
+                    contextMenuBuilder: (context, state) =>
+                        MovableSelectionMenu(editorState: state),
                   ),
                 ),
               ),
@@ -686,50 +689,78 @@ class _MinimalToolbar extends StatelessWidget {
               .formatSelection(active(a) ? Attribute.clone(a, null) : a);
         }
 
-        Widget btn(IconData icon, {bool on = false, VoidCallback? onTap}) =>
-            IconButton(
-              iconSize: 20,
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              color:
-                  on ? theme.colorScheme.primary : theme.colorScheme.onSurface,
-              icon: Icon(icon),
-              onPressed: onTap,
-            );
+        Widget btn(IconData icon, {bool on = false, VoidCallback? onTap}) {
+          final accent = theme.colorScheme.primary;
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              decoration: BoxDecoration(
+                color: on ? accent.withValues(alpha: 0.16) : Colors.transparent,
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                iconSize: 20,
+                visualDensity: VisualDensity.compact,
+                color: on ? accent : theme.colorScheme.onSurface,
+                icon: Icon(icon),
+                onPressed: onTap,
+              ),
+            ),
+          );
+        }
 
-        return SizedBox(
-          height: 46,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            children: [
-              btn(Icons.undo, onTap: controller.undo),
-              btn(Icons.redo, onTap: controller.redo),
-              _sep(theme),
-              btn(Icons.format_bold,
-                  on: active(Attribute.bold),
-                  onTap: () => toggle(Attribute.bold)),
-              btn(Icons.format_italic,
-                  on: active(Attribute.italic),
-                  onTap: () => toggle(Attribute.italic)),
-              btn(Icons.format_underlined,
-                  on: active(Attribute.underline),
-                  onTap: () => toggle(Attribute.underline)),
-              _sep(theme),
-              _HeadingMenu(controller: controller, active: active),
-              _sep(theme),
-              btn(Icons.format_list_bulleted,
-                  on: active(Attribute.ul),
-                  onTap: () => toggle(Attribute.ul)),
-              btn(Icons.checklist,
-                  on: active(Attribute.checked),
-                  onTap: () => toggle(Attribute.checked)),
-              _sep(theme),
-              btn(Icons.image_outlined, onTap: onImage),
-              btn(Icons.photo_camera_outlined, onTap: onCamera),
-              btn(Icons.emoji_emotions_outlined, onTap: onSticker),
-              btn(Icons.more_horiz, onTap: onMore),
-            ],
+        // A distinct, floating "island" toolbar.
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+          child: Container(
+            height: 52,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(26),
+              border:
+                  Border.all(color: theme.dividerColor.withValues(alpha: 0.7)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              children: [
+                btn(Icons.undo, onTap: controller.undo),
+                btn(Icons.redo, onTap: controller.redo),
+                _sep(theme),
+                btn(Icons.format_bold,
+                    on: active(Attribute.bold),
+                    onTap: () => toggle(Attribute.bold)),
+                btn(Icons.format_italic,
+                    on: active(Attribute.italic),
+                    onTap: () => toggle(Attribute.italic)),
+                btn(Icons.format_underlined,
+                    on: active(Attribute.underline),
+                    onTap: () => toggle(Attribute.underline)),
+                _sep(theme),
+                _HeadingMenu(controller: controller, active: active),
+                _sep(theme),
+                btn(Icons.format_list_bulleted,
+                    on: active(Attribute.ul),
+                    onTap: () => toggle(Attribute.ul)),
+                btn(Icons.checklist,
+                    on: active(Attribute.checked),
+                    onTap: () => toggle(Attribute.checked)),
+                _sep(theme),
+                btn(Icons.image_outlined, onTap: onImage),
+                btn(Icons.photo_camera_outlined, onTap: onCamera),
+                btn(Icons.emoji_emotions_outlined, onTap: onSticker),
+                btn(Icons.more_horiz, onTap: onMore),
+              ],
+            ),
           ),
         );
       },
@@ -737,10 +768,14 @@ class _MinimalToolbar extends StatelessWidget {
   }
 
   Widget _sep(ThemeData theme) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
-        child: VerticalDivider(
+        padding: const EdgeInsets.symmetric(horizontal: 3),
+        child: Center(
+          child: Container(
             width: 1,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.15)),
+            height: 22,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.12),
+          ),
+        ),
       );
 }
 

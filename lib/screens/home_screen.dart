@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../data/notes_store.dart';
 import '../data/settings_store.dart';
 import '../models/note.dart';
+import '../widgets/decor.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/motion.dart';
 import '../widgets/note_card.dart';
@@ -21,174 +22,156 @@ class HomeScreen extends StatelessWidget {
     final recent = store.unpinned;
     final isGrid = settings.viewMode == ViewMode.grid;
 
-    return SafeArea(
-      child: Column(
-        children: [
-          _Header(settings: settings),
-          Expanded(
-            child: (pinned.isEmpty && recent.isEmpty)
-                ? const EmptyState(
-                    icon: Icons.edit_note,
-                    title: 'No notes yet',
-                    subtitle:
-                        'Tap + to create your first note.\nGood ideas live here.',
-                  )
-                : ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
-                    children: [
-                      if (pinned.isNotEmpty) ...[
-                        const _SectionLabel('Pinned'),
-                        _NotesBlock(notes: pinned, isGrid: isGrid),
-                        const SizedBox(height: 18),
+    return BlobBackground(
+      child: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: (pinned.isEmpty && recent.isEmpty)
+                  ? const EmptyState(
+                      icon: Icons.edit_note,
+                      title: 'No notes yet',
+                      subtitle:
+                          'Tap + to create your first note.\nGood ideas live here.',
+                    )
+                  : ListView(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 110),
+                      children: [
+                        _Greeting(settings: settings),
+                        const SizedBox(height: 14),
+                        _SearchPill(),
+                        const SizedBox(height: 20),
+                        if (pinned.isNotEmpty) ...[
+                          _SectionHeader(
+                              title: 'Pinned', count: pinned.length),
+                          _NotesBlock(notes: pinned, isGrid: isGrid),
+                          const SizedBox(height: 22),
+                        ],
+                        if (recent.isNotEmpty) ...[
+                          _SectionHeader(
+                              title: 'All Notes', count: recent.length),
+                          _NotesBlock(notes: recent, isGrid: isGrid),
+                        ],
                       ],
-                      if (recent.isNotEmpty) ...[
-                        const _SectionLabel('Recent Notes'),
-                        _NotesBlock(notes: recent, isGrid: isGrid),
-                      ],
-                    ],
-                  ),
-          ),
-        ],
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header({required this.settings});
+class _Greeting extends StatelessWidget {
+  const _Greeting({required this.settings});
   final SettingsStore settings;
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isGrid = settings.viewMode == ViewMode.grid;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Notoo',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  Text(
-                    'Good ideas live here.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.search),
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const SearchScreen()),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.grid_view_rounded,
-                        size: 15, color: theme.colorScheme.primary),
-                    const SizedBox(width: 6),
-                    Text('All Notes',
-                        style: TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                            color: theme.colorScheme.primary)),
-                  ],
-                ),
-              ),
-              const Spacer(),
-              _ViewToggle(
-                isGrid: isGrid,
-                onChanged: (g) =>
-                    settings.setViewMode(g ? ViewMode.grid : ViewMode.list),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+  String get _timeOfDay {
+    final h = DateTime.now().hour;
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
   }
-}
-
-class _ViewToggle extends StatelessWidget {
-  const _ViewToggle({required this.isGrid, required this.onChanged});
-  final bool isGrid;
-  final ValueChanged<bool> onChanged;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _btn(theme, Icons.grid_view_rounded, isGrid, () => onChanged(true)),
-          _btn(theme, Icons.view_agenda_outlined, !isGrid, () => onChanged(false)),
-        ],
-      ),
-    );
-  }
-
-  Widget _btn(ThemeData theme, IconData icon, bool active, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.all(7),
-        child: Icon(icon,
-            size: 18,
-            color: active
-                ? theme.colorScheme.primary
-                : theme.colorScheme.onSurfaceVariant),
-      ),
-    );
-  }
-}
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 2, bottom: 10, top: 6),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-          letterSpacing: 0.3,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Notoo',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '$_timeOfDay,',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              Text(
+                settings.userName,
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ],
+          ),
         ),
+        const StickyNote(text: 'Small\nnotes.\nBig ideas.', rotation: 0.06),
+      ],
+    );
+  }
+}
+
+class _SearchPill extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Bouncy(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const SearchScreen()),
+      ),
+      child: Container(
+        height: 50,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(26),
+          border: Border.all(color: theme.dividerColor.withValues(alpha: 0.6)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.search,
+                size: 20, color: theme.colorScheme.onSurfaceVariant),
+            const SizedBox(width: 10),
+            Text(
+              'Search notes, tags, folders…',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title, required this.count});
+  final String title;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(left: 2, bottom: 12, top: 2),
+      child: Row(
+        children: [
+          Text(
+            title,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.2,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text('$count',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              )),
+        ],
       ),
     );
   }
@@ -211,7 +194,7 @@ class _NotesBlock extends StatelessWidget {
           crossAxisCount: 2,
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
-          childAspectRatio: 0.82,
+          childAspectRatio: 0.84,
         ),
         itemBuilder: (_, i) =>
             RiseIn(index: i, child: _card(context, notes[i])),

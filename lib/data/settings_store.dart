@@ -25,6 +25,7 @@ class SettingsStore extends ChangeNotifier {
   int accentIndex = 0;
   double fontScale = 1.0;
   String fontFamily = 'System';
+  String userName = 'friend';
   int editorPaperIndex = 0;
   int paperPatternIndex = 0;
   ViewMode viewMode = ViewMode.grid;
@@ -47,6 +48,7 @@ class SettingsStore extends ChangeNotifier {
                 ((m['accentIndex'] as int?) ?? 0).clamp(0, kAccents.length - 1);
             fontScale = ((m['fontScale'] as num?) ?? 1.0).toDouble();
             fontFamily = (m['fontFamily'] as String?) ?? 'System';
+            userName = (m['userName'] as String?) ?? 'friend';
             editorPaperIndex = ((m['editorPaperIndex'] as int?) ?? 0)
                 .clamp(0, AppColors.papers.length - 1);
             paperPatternIndex = ((m['paperPatternIndex'] as int?) ?? 0)
@@ -73,6 +75,7 @@ class SettingsStore extends ChangeNotifier {
         'accentIndex': accentIndex,
         'fontScale': fontScale,
         'fontFamily': fontFamily,
+        'userName': userName,
         'editorPaperIndex': editorPaperIndex,
         'paperPatternIndex': paperPatternIndex,
         'viewMode': viewMode.index,
@@ -103,6 +106,12 @@ class SettingsStore extends ChangeNotifier {
 
   Future<void> setFontFamily(String f) async {
     fontFamily = f;
+    await _save();
+    notifyListeners();
+  }
+
+  Future<void> setUserName(String v) async {
+    userName = v.trim().isEmpty ? 'friend' : v.trim();
     await _save();
     notifyListeners();
   }

@@ -24,6 +24,24 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
         children: [
+          // ---------- Your name ----------
+          const _SectionTitle('Your name'),
+          TextFormField(
+            initialValue: settings.userName,
+            textCapitalization: TextCapitalization.words,
+            decoration: InputDecoration(
+              hintText: 'friend',
+              filled: true,
+              fillColor: theme.colorScheme.surface,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            onFieldSubmitted: settings.setUserName,
+          ),
+          const SizedBox(height: 22),
+
           // ---------- Appearance ----------
           const _SectionTitle('Appearance'),
           Row(

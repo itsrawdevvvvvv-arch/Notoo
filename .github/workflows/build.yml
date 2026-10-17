@@ -33,6 +33,18 @@ jobs:
       - name: Show Flutter version
         run: flutter --version
 
+      - name: Install stable signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.NOTOO_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            mkdir -p "$HOME/.android"
+            printf '%s' "$KEYSTORE_B64" | base64 -d > "$HOME/.android/debug.keystore"
+            echo "Installed stable signing keystore."
+          else
+            echo "WARNING: no NOTOO_KEYSTORE_B64 secret; signature will not be stable."
+          fi
+
       - name: Generate Android platform files
         run: |
           flutter create --platforms=android --org com.notoo --project-name notoo /tmp/notoo_scaffold
@@ -77,6 +89,12 @@ jobs:
           mv app-x86_64-release.apk Notoo-x86_64.apk || true
           sha256sum Notoo-*.apk > SHA256SUMS.txt
           ls -la
+
+      - name: Show APK signer certificate
+        run: |
+          APK=build/app/outputs/flutter-apk/Notoo-arm64-v8a.apk
+          BT=$(ls -d "$ANDROID_SDK_ROOT"/build-tools/* 2>/dev/null | sort -V | tail -n1)
+          "$BT"/apksigner verify --print-certs "$APK" 2>/dev/null | head -n 4 || true
 
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
