@@ -37,8 +37,12 @@ jobs:
 
       - name: Set minSdk to 28 (Android 9)
         run: |
-          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 28/' android/app/build.gradle
-          grep -n "minSdk" android/app/build.gradle || true
+          FILE=$(ls android/app/build.gradle.kts android/app/build.gradle 2>/dev/null | head -n1)
+          echo "Gradle file: $FILE"
+          sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 28/' "$FILE" || true
+          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 28/' "$FILE" || true
+          grep -n "minSdk" "$FILE" || true
+          echo "--- done ---"
 
       - name: Install dependencies
         run: flutter pub get
