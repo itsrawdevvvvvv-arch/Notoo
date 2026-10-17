@@ -12,13 +12,8 @@ class NotooImageEmbedBuilder extends EmbedBuilder {
   String get key => BlockEmbed.imageType;
 
   @override
-  Widget build(
-    BuildContext context,
-    Embed node,
-    bool readOnly,
-    QuillEditorConfig config,
-  ) {
-    final src = (node.value.data ?? '').toString();
+  Widget build(BuildContext context, EmbedContext embedContext) {
+    final src = (embedContext.node.value.data ?? '').toString();
     Widget child;
     if (src.startsWith('assets/')) {
       child = Image.asset(src, fit: BoxFit.contain);

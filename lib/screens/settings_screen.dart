@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../data/notes_store.dart';
 import '../data/settings_store.dart';
 import '../services/export_service.dart';
-import '../generated/sticker_manifest.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_fonts.dart';
 import '../theme/app_theme.dart';
