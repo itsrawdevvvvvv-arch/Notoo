@@ -222,10 +222,18 @@ class _EditorScreenState extends State<EditorScreen> {
                     label: const Text('Save / Share'),
                     onPressed: () async {
                       Navigator.pop(ctx);
-                      final path =
-                          await ExportService.exportNote(_note, format);
-                      await ExportService.shareFile(path,
-                          text: _note.displayTitle);
+                      try {
+                        final path =
+                            await ExportService.exportNote(_note, format);
+                        await ExportService.shareFile(path,
+                            text: _note.displayTitle);
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Export failed: $e')),
+                          );
+                        }
+                      }
                     },
                   ),
                 ),

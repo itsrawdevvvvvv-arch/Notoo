@@ -1,8 +1,8 @@
 # Notoo
 
-[![Latest release](https://img.shields.io/github/v/release/itsrawdevvvvvv-arch/Notoo
-[![Stars](https://img.shields.io/github/stars/itsrawdevvvvvv-arch/Notoo
-[![Platform](https://img.shields.io/badge/platform-Android%209%2B-4F6B57)](
+[![Latest release](https://img.shields.io/github/v/release/itsrawdevvvvvv-arch/Notoo?color=4F6B57)](https://github.com/itsrawdevvvvvv-arch/Notoo/releases/latest)
+[![Stars](https://img.shields.io/github/stars/itsrawdevvvvvv-arch/Notoo?color=4F6B57)](https://github.com/itsrawdevvvvvv-arch/Notoo/stargazers)
+[![Platform](https://img.shields.io/badge/platform-Android%209%2B-4F6B57)](#download)
 [![License: MIT](https://img.shields.io/badge/License-MIT-4F6B57.svg)](LICENSE)
 
 A warm, editorial notes app for Android 9+ (API 28 and above).

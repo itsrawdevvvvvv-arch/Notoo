@@ -1,7 +1,10 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../theme/app_theme.dart';
+import 'storage_dir.dart';
 
 /// How the home list is laid out.
 enum ViewMode { grid, list }
@@ -10,15 +13,11 @@ enum ViewMode { grid, list }
 enum ExportFormat { pdf, txt }
 
 /// User preferences — appearance, font, colour accent, view, export defaults.
+///
+/// Persisted as a small JSON file (no platform plugin), and fully fail-safe:
+/// if storage is unavailable the app still runs with in-memory settings.
 class SettingsStore extends ChangeNotifier {
-  static const _kAppearance = 'appearance';
-  static const _kFontScale = 'font_scale';
-  static const _kFontFamily = 'font_family';
-  static const _kView = 'view_mode';
-  static const _kExport = 'export_format';
-  static const _kAccent = 'accent_index';
-
-  SharedPreferences? _prefs;
+  File? _file;
 
   Appearance appearance = Appearance.light;
   double fontScale = 1.0;
@@ -28,54 +27,82 @@ class SettingsStore extends ChangeNotifier {
   int accentIndex = 0;
 
   Future<void> load() async {
-    _prefs = await SharedPreferences.getInstance();
-    final p = _prefs!;
-    appearance = Appearance.values[
-        (p.getInt(_kAppearance) ?? Appearance.light.index)
-            .clamp(0, Appearance.values.length - 1)];
-    fontScale = p.getDouble(_kFontScale) ?? 1.0;
-    fontFamily = p.getString(_kFontFamily) ?? 'System';
-    viewMode = ViewMode.values[
-        (p.getInt(_kView) ?? ViewMode.grid.index).clamp(0, 1)];
-    exportFormat = ExportFormat.values[
-        (p.getInt(_kExport) ?? ExportFormat.pdf.index).clamp(0, 1)];
-    accentIndex = p.getInt(_kAccent) ?? 0;
+    try {
+      final dir = await resolveStorageDir();
+      _file = File('${dir.path}/settings.json');
+      if (await _file!.exists()) {
+        final raw = await _file!.readAsString();
+        if (raw.trim().isNotEmpty) {
+          final m = jsonDecode(raw);
+          if (m is Map) {
+            appearance = Appearance.values[
+                ((m['appearance'] as int?) ?? 0).clamp(0, Appearance.values.length - 1)];
+            fontScale = ((m['fontScale'] as num?) ?? 1.0).toDouble();
+            fontFamily = (m['fontFamily'] as String?) ?? 'System';
+            viewMode =
+                ViewMode.values[((m['viewMode'] as int?) ?? 0).clamp(0, 1)];
+            exportFormat =
+                ExportFormat.values[((m['exportFormat'] as int?) ?? 0).clamp(0, 1)];
+            accentIndex = (m['accentIndex'] as int?) ?? 0;
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('SettingsStore.load failed (using defaults): $e');
+    }
     notifyListeners();
+  }
+
+  Future<void> _save() async {
+    try {
+      final f = _file;
+      if (f == null) return;
+      await f.writeAsString(jsonEncode({
+        'appearance': appearance.index,
+        'fontScale': fontScale,
+        'fontFamily': fontFamily,
+        'viewMode': viewMode.index,
+        'exportFormat': exportFormat.index,
+        'accentIndex': accentIndex,
+      }));
+    } catch (e) {
+      debugPrint('SettingsStore._save failed: $e');
+    }
   }
 
   Future<void> setAppearance(Appearance a) async {
     appearance = a;
-    await _prefs?.setInt(_kAppearance, a.index);
+    await _save();
     notifyListeners();
   }
 
   Future<void> setFontScale(double s) async {
     fontScale = s;
-    await _prefs?.setDouble(_kFontScale, s);
+    await _save();
     notifyListeners();
   }
 
   Future<void> setFontFamily(String f) async {
     fontFamily = f;
-    await _prefs?.setString(_kFontFamily, f);
+    await _save();
     notifyListeners();
   }
 
   Future<void> setViewMode(ViewMode v) async {
     viewMode = v;
-    await _prefs?.setInt(_kView, v.index);
+    await _save();
     notifyListeners();
   }
 
   Future<void> setExportFormat(ExportFormat f) async {
     exportFormat = f;
-    await _prefs?.setInt(_kExport, f.index);
+    await _save();
     notifyListeners();
   }
 
   Future<void> setAccentIndex(int i) async {
     accentIndex = i;
-    await _prefs?.setInt(_kAccent, i);
+    await _save();
     notifyListeners();
   }
 

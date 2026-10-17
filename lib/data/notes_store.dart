@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:path_provider/path_provider.dart';
 
 import '../models/note.dart';
 import '../models/note_folder.dart';
 import '../models/note_tag.dart';
+import 'storage_dir.dart';
 
 /// Local-first store. Everything lives in JSON files in the app's documents
 /// directory — no account, no cloud, no network permission required.
@@ -21,13 +21,8 @@ class NotesStore extends ChangeNotifier {
 
   Future<Directory> _ensureDir() async {
     if (_dir != null) return _dir!;
-    final base = await getApplicationDocumentsDirectory();
-    final dir = Directory('${base.path}/notoo');
-    if (!await dir.exists()) {
-      await dir.create(recursive: true);
-    }
-    _dir = dir;
-    return dir;
+    _dir = await resolveStorageDir();
+    return _dir!;
   }
 
   File _file(Directory dir, String name) => File('${dir.path}/$name');
