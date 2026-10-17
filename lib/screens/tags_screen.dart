@@ -100,7 +100,6 @@ class TagsScreen extends StatelessWidget {
               onPressed: () => Navigator.pop(ctx),
               child: const Text('Cancel')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.green),
             onPressed: () => Navigator.pop(ctx, controller.text),
             child: const Text('Create'),
           ),

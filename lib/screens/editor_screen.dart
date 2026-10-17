@@ -289,18 +289,6 @@ class _EditorScreenState extends State<EditorScreen> {
         .formatSelection(active ? Attribute.clone(attr, null) : attr);
   }
 
-  void _setHeader(int? level) {
-    if (level == null) {
-      for (final a in [Attribute.h1, Attribute.h2, Attribute.h3]) {
-        _controller.formatSelection(Attribute.clone(a, null));
-      }
-      return;
-    }
-    _controller.formatSelection(
-      level == 1 ? Attribute.h1 : (level == 2 ? Attribute.h2 : Attribute.h3),
-    );
-  }
-
   void _clearFormat() {
     for (final a in [
       Attribute.bold,

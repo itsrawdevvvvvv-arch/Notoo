@@ -75,7 +75,6 @@ class FoldersScreen extends StatelessWidget {
               onPressed: () => Navigator.pop(ctx),
               child: const Text('Cancel')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.green),
             onPressed: () => Navigator.pop(ctx, controller.text),
             child: const Text('Create'),
           ),
@@ -169,7 +168,7 @@ class _FolderTile extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(Icons.folder_rounded,
-                    color: AppColors.greenDeep, size: 22),
+                    color: AppColors.ink, size: 22),
               ),
               const SizedBox(width: 14),
               Expanded(
