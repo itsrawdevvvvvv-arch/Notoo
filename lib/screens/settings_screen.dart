@@ -4,9 +4,11 @@ import 'package:provider/provider.dart';
 import '../data/notes_store.dart';
 import '../data/settings_store.dart';
 import '../services/export_service.dart';
+import '../generated/sticker_manifest.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_fonts.dart';
 import '../theme/app_theme.dart';
+import '../theme/patterns.dart';
 import '../widgets/motion.dart';
 import 'trash_screen.dart';
 
@@ -138,6 +140,20 @@ class SettingsScreen extends StatelessWidget {
                 ),
             ],
           ),
+          const SizedBox(height: 14),
+          const _SectionTitle('Writing pad pattern'),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              for (var i = 0; i < PaperPattern.values.length; i++)
+                _PatternSwatch(
+                  index: i,
+                  selected: settings.paperPatternIndex == i,
+                  onTap: () => settings.setPaperPatternIndex(i),
+                ),
+            ],
+          ),
           const SizedBox(height: 22),
 
           // ---------- View ----------
@@ -229,6 +245,20 @@ class SettingsScreen extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(height: 22),
+
+          // ---------- Credits ----------
+          const _SectionTitle('Credits & licences'),
+          Text(
+            'Sticker art: Open Doodles by Pablo Stanley (CC0, public domain); '
+            'Twemoji graphics (CC BY 4.0). Fonts: Google Fonts (SIL Open Font '
+            'License). Notoo itself is MIT licensed.',
+            style: TextStyle(
+              fontSize: 12,
+              height: 1.45,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
         ],
       ),
     );
@@ -281,6 +311,57 @@ class _AccentGrid extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+class _PatternSwatch extends StatelessWidget {
+  const _PatternSwatch({
+    required this.index,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final int index;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: selected
+                    ? theme.colorScheme.primary
+                    : theme.dividerColor,
+                width: selected ? 2.5 : 1,
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: PaperBackground(
+                pattern: PaperPattern.values[index],
+                color: theme.colorScheme.surface,
+                child: const SizedBox.expand(),
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(kPaperPatternNames[index],
+              style: TextStyle(
+                  fontSize: 10.5,
+                  color: theme.colorScheme.onSurfaceVariant)),
+        ],
+      ),
     );
   }
 }

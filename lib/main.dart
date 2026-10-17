@@ -4,11 +4,13 @@ import 'package:provider/provider.dart';
 import 'app.dart';
 import 'data/notes_store.dart';
 import 'data/settings_store.dart';
+import 'theme/app_colors.dart';
+import 'theme/app_theme.dart';
+import 'widgets/splash.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Show any UI build error on screen instead of a blank page.
   ErrorWidget.builder = (details) => Material(
         color: const Color(0xFFF7F3EA),
         child: Padding(
@@ -27,13 +29,9 @@ void main() {
   FlutterError.onError = (details) => FlutterError.presentError(details);
 
   // Render the very first frame immediately, with NO async work before it.
-  // All initialisation happens inside the widget tree, so the app can never
-  // get stuck on a black screen waiting for a plugin.
   runApp(const NotooBootstrap());
 }
 
-/// Boots Notoo: draws a frame instantly, loads data in the background, then
-/// swaps in the real app (or an error screen if something failed).
 class NotooBootstrap extends StatefulWidget {
   const NotooBootstrap({super.key});
 
@@ -67,6 +65,8 @@ class _NotooBootstrapState extends State<NotooBootstrap> {
     } catch (e) {
       err ??= e;
     }
+    // Let the splash breathe a moment so it feels deliberate, not flickery.
+    await Future<void>.delayed(const Duration(milliseconds: 1100));
     if (!mounted) return;
     setState(() {
       _settings = settings;
@@ -76,17 +76,19 @@ class _NotooBootstrapState extends State<NotooBootstrap> {
     });
   }
 
+  ThemeData get _splashTheme => AppTheme.build(
+        appearance: Appearance.light,
+        accent: kAccents[0],
+        fontFamily: 'System',
+      );
+
   @override
   Widget build(BuildContext context) {
     if (!_done) {
-      return const MaterialApp(
+      return MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: Scaffold(
-          backgroundColor: Color(0xFFF7F3EA),
-          body: Center(
-            child: CircularProgressIndicator(color: Color(0xFF4F6B57)),
-          ),
-        ),
+        theme: _splashTheme,
+        home: const SplashScreen(),
       );
     }
 

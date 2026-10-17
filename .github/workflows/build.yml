@@ -55,6 +55,9 @@ jobs:
       - name: Fetch bundled fonts
         run: python3 tool/fetch_fonts.py
 
+      - name: Fetch bundled stickers
+        run: python3 tool/fetch_stickers.py
+
       - name: Install dependencies
         run: flutter pub get
 

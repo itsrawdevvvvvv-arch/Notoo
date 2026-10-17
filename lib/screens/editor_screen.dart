@@ -1,21 +1,23 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../data/notes_store.dart';
 import '../data/settings_store.dart';
+import '../data/storage_dir.dart';
+import '../editor/embeds.dart';
 import '../models/note.dart';
 import '../services/export_service.dart';
 import '../theme/app_colors.dart';
-import '../widgets/sticker_picker.dart';
+import '../theme/patterns.dart';
+import '../widgets/sticker_library.dart';
 
 /// The note editor — the heart of Notoo.
-///
-/// Built on `flutter_quill` (a battle-tested rich-text engine) rather than a
-/// hand-rolled field, so caret/IME behaviour stays solid. Saves are debounced
-/// off the keystroke path so typing never blocks on disk I/O.
 class EditorScreen extends StatefulWidget {
   const EditorScreen({super.key, required this.note, this.readOnly = false});
 
@@ -109,17 +111,99 @@ class _EditorScreenState extends State<EditorScreen> {
     await _store.togglePin(_note);
   }
 
-  Future<void> _insertSticker() async {
-    final sticker = await showStickerPicker(context);
-    if (sticker == null || !mounted) return;
-    final sel = _controller.selection;
-    final index =
-        sel.isValid ? sel.end : _controller.document.length - 1;
-    _controller.document.insert(index, sticker);
+  // ---------- Inserting content ----------
+
+  int get _insertIndex =>
+      _controller.selection.isValid
+          ? _controller.selection.end
+          : _controller.document.length - 1;
+
+  void _insertEmbed(String src) {
+    final index = _insertIndex;
+    _controller.document.insert(index, BlockEmbed.image(src));
     _controller.updateSelection(
-      TextSelection.collapsed(offset: index + sticker.length),
+      TextSelection.collapsed(offset: index + 1),
       ChangeSource.local,
     );
+  }
+
+  void _insertText(String text) {
+    final index = _insertIndex;
+    _controller.document.insert(index, text);
+    _controller.updateSelection(
+      TextSelection.collapsed(offset: index + text.length),
+      ChangeSource.local,
+    );
+  }
+
+  Future<String?> _persist(String srcPath) async {
+    try {
+      final dir = await resolveStorageDir();
+      final media = Directory('${dir.path}/media');
+      if (!await media.exists()) await media.create(recursive: true);
+      final dot = srcPath.lastIndexOf('.');
+      final ext = dot >= 0 ? srcPath.substring(dot) : '.jpg';
+      final dest =
+          '${media.path}/media_${DateTime.now().microsecondsSinceEpoch}$ext';
+      await File(srcPath).copy(dest);
+      return dest;
+    } catch (e) {
+      debugPrint('persist failed: $e');
+      return null;
+    }
+  }
+
+  void _toast(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  Future<void> _insertSticker() async {
+    final asset = await showStickerPicker(context);
+    if (asset == null) return;
+    _insertEmbed(asset);
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(source: source, imageQuality: 88);
+      if (picked == null) return;
+      final saved = await _persist(picked.path);
+      if (saved != null) {
+        _insertEmbed(saved);
+      } else {
+        _toast('Could not save that image.');
+      }
+    } catch (e) {
+      _toast('Could not add image: $e');
+    }
+  }
+
+  Future<void> _pickFile() async {
+    try {
+      final res = await FilePicker.platform.pickFiles();
+      final file = res?.files.single;
+      if (file == null || file.path == null) return;
+      final lower = file.name.toLowerCase();
+      final isImage = lower.endsWith('.png') ||
+          lower.endsWith('.jpg') ||
+          lower.endsWith('.jpeg') ||
+          lower.endsWith('.gif') ||
+          lower.endsWith('.webp');
+      if (isImage) {
+        final saved = await _persist(file.path!);
+        if (saved != null) {
+          _insertEmbed(saved);
+        } else {
+          _toast('Could not save that file.');
+        }
+      } else {
+        _insertText('${file.name}  ');
+      }
+    } catch (e) {
+      _toast('Could not attach file: $e');
+    }
   }
 
   @override
@@ -168,8 +252,8 @@ class _EditorScreenState extends State<EditorScreen> {
             ),
         ],
       ),
-      body: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
+      body: PaperBackground(
+        pattern: PaperPattern.values[settings.paperPatternIndex],
         color: paper,
         child: Theme(
           data: paperTheme,
@@ -199,15 +283,18 @@ class _EditorScreenState extends State<EditorScreen> {
                 _MinimalToolbar(
                   controller: _controller,
                   onSticker: _insertSticker,
+                  onImage: () => _pickImage(ImageSource.gallery),
+                  onCamera: () => _pickImage(ImageSource.camera),
+                  onFile: _pickFile,
                   onMore: _showFormatSheet,
                 ),
-              Divider(
-                  height: 1,
-                  color: onPaper.withValues(alpha: 0.12)),
+              Divider(height: 1, color: onPaper.withValues(alpha: 0.12)),
               Expanded(
                 child: QuillEditor.basic(
                   controller: _controller,
-                  config: const QuillEditorConfig(),
+                  config: const QuillEditorConfig(
+                    embedBuilders: [NotooImageEmbedBuilder()],
+                  ),
                 ),
               ),
             ],
@@ -285,8 +372,7 @@ class _EditorScreenState extends State<EditorScreen> {
   void _toggle(Attribute attr) {
     final active =
         _controller.getSelectionStyle().attributes.containsKey(attr.key);
-    _controller
-        .formatSelection(active ? Attribute.clone(attr, null) : attr);
+    _controller.formatSelection(active ? Attribute.clone(attr, null) : attr);
   }
 
   void _clearFormat() {
@@ -353,11 +439,7 @@ class _EditorScreenState extends State<EditorScreen> {
                         await ExportService.shareFile(path,
                             text: _note.displayTitle);
                       } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Export failed: $e')),
-                          );
-                        }
+                        _toast('Export failed: $e');
                       }
                     },
                   ),
@@ -506,7 +588,8 @@ class _EditorScreenState extends State<EditorScreen> {
           ),
         ),
         child: index == null
-            ? Icon(Icons.block, size: 18, color: theme.colorScheme.onSurfaceVariant)
+            ? Icon(Icons.block,
+                size: 18, color: theme.colorScheme.onSurfaceVariant)
             : (selected
                 ? const Icon(Icons.check, size: 18, color: AppColors.ink)
                 : null),
@@ -607,11 +690,17 @@ class _MinimalToolbar extends StatelessWidget {
   const _MinimalToolbar({
     required this.controller,
     required this.onSticker,
+    required this.onImage,
+    required this.onCamera,
+    required this.onFile,
     required this.onMore,
   });
 
   final QuillController controller;
   final VoidCallback onSticker;
+  final VoidCallback onImage;
+  final VoidCallback onCamera;
+  final VoidCallback onFile;
   final VoidCallback onMore;
 
   @override
@@ -623,8 +712,8 @@ class _MinimalToolbar extends StatelessWidget {
         bool active(Attribute a) =>
             controller.getSelectionStyle().attributes.containsKey(a.key);
         void toggle(Attribute a) {
-          controller.formatSelection(
-              active(a) ? Attribute.clone(a, null) : a);
+          controller
+              .formatSelection(active(a) ? Attribute.clone(a, null) : a);
         }
 
         Widget btn(IconData icon, {bool on = false, VoidCallback? onTap}) =>
@@ -632,7 +721,8 @@ class _MinimalToolbar extends StatelessWidget {
               iconSize: 20,
               visualDensity: VisualDensity.compact,
               padding: const EdgeInsets.symmetric(horizontal: 4),
-              color: on ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+              color:
+                  on ? theme.colorScheme.primary : theme.colorScheme.onSurface,
               icon: Icon(icon),
               onPressed: onTap,
             );
@@ -665,6 +755,9 @@ class _MinimalToolbar extends StatelessWidget {
                   on: active(Attribute.checked),
                   onTap: () => toggle(Attribute.checked)),
               _sep(theme),
+              btn(Icons.image_outlined, onTap: onImage),
+              btn(Icons.photo_camera_outlined, onTap: onCamera),
+              btn(Icons.attach_file, onTap: onFile),
               btn(Icons.emoji_emotions_outlined, onTap: onSticker),
               btn(Icons.more_horiz, onTap: onMore),
             ],
@@ -677,7 +770,8 @@ class _MinimalToolbar extends StatelessWidget {
   Widget _sep(ThemeData theme) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
         child: VerticalDivider(
-            width: 1, color: theme.colorScheme.onSurface.withValues(alpha: 0.15)),
+            width: 1,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.15)),
       );
 }
 

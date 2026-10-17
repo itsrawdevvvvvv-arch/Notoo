@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
+import '../theme/patterns.dart';
 import 'storage_dir.dart';
 
 /// How the home list is laid out.
@@ -25,6 +26,7 @@ class SettingsStore extends ChangeNotifier {
   double fontScale = 1.0;
   String fontFamily = 'System';
   int editorPaperIndex = 0;
+  int paperPatternIndex = 0;
   ViewMode viewMode = ViewMode.grid;
   ExportFormat exportFormat = ExportFormat.pdf;
 
@@ -47,6 +49,8 @@ class SettingsStore extends ChangeNotifier {
             fontFamily = (m['fontFamily'] as String?) ?? 'System';
             editorPaperIndex = ((m['editorPaperIndex'] as int?) ?? 0)
                 .clamp(0, AppColors.papers.length - 1);
+            paperPatternIndex = ((m['paperPatternIndex'] as int?) ?? 0)
+                .clamp(0, PaperPattern.values.length - 1);
             viewMode =
                 ViewMode.values[((m['viewMode'] as int?) ?? 0).clamp(0, 1)];
             exportFormat = ExportFormat.values[
@@ -70,6 +74,7 @@ class SettingsStore extends ChangeNotifier {
         'fontScale': fontScale,
         'fontFamily': fontFamily,
         'editorPaperIndex': editorPaperIndex,
+        'paperPatternIndex': paperPatternIndex,
         'viewMode': viewMode.index,
         'exportFormat': exportFormat.index,
       }));
@@ -104,6 +109,12 @@ class SettingsStore extends ChangeNotifier {
 
   Future<void> setEditorPaperIndex(int i) async {
     editorPaperIndex = i.clamp(0, AppColors.papers.length - 1);
+    await _save();
+    notifyListeners();
+  }
+
+  Future<void> setPaperPatternIndex(int i) async {
+    paperPatternIndex = i.clamp(0, PaperPattern.values.length - 1);
     await _save();
     notifyListeners();
   }

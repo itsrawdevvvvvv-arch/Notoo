@@ -23,3 +23,6 @@ android/key.properties
 
 # Fonts are fetched at build time by tool/fetch_fonts.py
 assets/fonts/
+
+# Stickers are fetched at build time by tool/fetch_stickers.py
+assets/stickers/
