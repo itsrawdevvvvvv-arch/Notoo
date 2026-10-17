@@ -38,13 +38,15 @@ jobs:
           flutter create --platforms=android --org com.notoo --project-name notoo /tmp/notoo_scaffold
           cp -r /tmp/notoo_scaffold/android ./android
 
-      - name: Set minSdk to 28 (Android 9)
+      - name: Set minSdk 28 and compileSdk 36
         run: |
           FILE=$(ls android/app/build.gradle.kts android/app/build.gradle 2>/dev/null | head -n1)
           echo "Gradle file: $FILE"
           sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 28/' "$FILE" || true
           sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 28/' "$FILE" || true
-          grep -n "minSdk" "$FILE" || true
+          sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 36/' "$FILE" || true
+          sed -i 's/compileSdkVersion flutter.compileSdkVersion/compileSdkVersion 36/' "$FILE" || true
+          grep -nE "minSdk|compileSdk" "$FILE" || true
 
       - name: Disable Impeller (fix black screen on some GPUs)
         run: |
