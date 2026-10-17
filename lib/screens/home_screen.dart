@@ -257,7 +257,7 @@ class _NotesBlock extends StatelessWidget {
           crossAxisSpacing: 12,
           childAspectRatio: 0.82,
         ),
-        itemBuilder: (_, i) => _card(notes[i]),
+        itemBuilder: (_, i) => _card(context, notes[i]),
       );
     }
     return Column(
@@ -265,13 +265,13 @@ class _NotesBlock extends StatelessWidget {
         for (final n in notes)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: _card(n),
+            child: _card(context, n),
           ),
       ],
     );
   }
 
-  Widget _card(Note n) => NoteCard(
+  Widget _card(BuildContext context, Note n) => NoteCard(
         note: n,
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => EditorScreen(note: n)),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../data/notes_store.dart';
-import '../theme/app_colors.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/note_card.dart';
 import 'editor_screen.dart';

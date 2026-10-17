@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../models/note.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_theme.dart';
 
 /// A single note card, used across Home / Archive / Trash / Search.
 class NoteCard extends StatelessWidget {

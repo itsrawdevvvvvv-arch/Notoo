@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 import '../data/notes_store.dart';
 import '../data/settings_store.dart';
 import '../models/note.dart';
-import '../models/note_tag.dart';
 import '../services/export_service.dart';
 import '../theme/app_colors.dart';
 
