@@ -30,8 +30,11 @@ places:
 2. Make a **fine-grained personal access token**: GitHub → Settings → Developer
    settings → Personal access tokens → Fine-grained tokens. Give it access to
    **only that repo**, with **Contents: Read and write**. Copy the token.
-3. In the Notoo app: **Profile → AI Connector**. Paste the repo (`yourname/notoo-sync`)
-   and the token, then tap **Test**, then **Send**. Your notes are now in the cloud.
+3. In the Notoo app: **Profile → AI Connector**. Paste **just the token** and tap
+   **Connect**. Notoo creates its own private repo, uploads your notes and links
+   everything up — there is nothing else to fill in. (The repo, file and branch
+   fields still exist behind **Advanced settings** if you want to point at an
+   existing repo instead.)
 
 ### Option B — a local file
 
