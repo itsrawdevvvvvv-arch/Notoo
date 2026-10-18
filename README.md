@@ -7,7 +7,7 @@
 **Notes & Canvas — a fast, offline notes app with a real infinite canvas.**
 
 [![Build APK](https://github.com/itsrawdevvvvvv-arch/Notoo/actions/workflows/android.yml/badge.svg)](https://github.com/itsrawdevvvvvv-arch/Notoo/actions/workflows/android.yml)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![License: MIT](https://img.shields.io/badge/License-MIT-4F6B57.svg)](LICENSE)
 
 [**⬇️ Download the APK**](../../releases/latest) · [**🌐 Try it in your browser**](https://itsrawdevvvvvv-arch.github.io/Notoo/)
 
@@ -21,13 +21,25 @@ Grab the latest build from the [**Releases page**](../../releases/latest):
 
 | File | What it is |
 |---|---|
-| `Notoo-app-release.apk` | Install this one. Signed with the standard Android debug key so it can be side-loaded. |
-| `Notoo-app-debug.apk` | Debug build. Installs alongside the release build under a separate package name. |
+| `Notoo-app-release.apk` | **Install this one.** |
+| `Notoo-app-debug.apk` | Same app with debug symbols — useful if something misbehaves. |
+
+Both share the package name `com.notoo.app` and a stable signing key, so **each new
+release installs straight over the previous one and keeps all your notes.** You never
+need to uninstall first.
 
 **To install:** open the `.apk` on your phone and allow installing from your browser when
 prompted (*Settings → Apps → Special access → Install unknown apps*). Android may warn that
 the app is from an unknown developer — that is expected for any app installed outside the
 Play Store.
+
+**Updating:** just install the newer APK over the old one. Your notes are kept.
+
+> **One exception.** The very first Android build of Notoo (v3.0.x, package
+> `com.notoo.app.debug`) was signed with a throwaway key generated on a temporary build
+> machine, which can never be reproduced. Android will refuse to update over it. If you have
+> that build, export your notes first (**Profile → Export all notes**), install this one, then
+> delete the old app and re-import. Every release from here on updates normally.
 
 You can also just open the [web version](https://itsrawdevvvvvv-arch.github.io/Notoo/) — it is
 the exact same app, and it installs to your home screen as a PWA (Add to Home screen) and works
@@ -55,7 +67,7 @@ offline.
 
 **The rest**
 - **36 fonts** to choose from — app-wide, per note, or per canvas object
-- Four screen transitions + a reduce-motion switch
+- One clean fade transition between screens, plus a reduce-motion switch
 - Light, dark, sepia themes and six accent colours
 - Command palette (Ctrl/⌘ + K) and keyboard shortcuts
 - Works fully offline; all data stays on your device
@@ -105,13 +117,31 @@ android/                    Android WebView wrapper
 .github/workflows/          APK build + release pipeline
 ```
 
+## Android notes
+
+A plain Android WebView is not a browser — file pickers, dialogs, downloads, printing, the
+clipboard and text-to-speech all need native code or they quietly do nothing. Notoo's shell
+wires all of that up:
+
+| Feature | How it works in the app |
+|---|---|
+| Insert image | native file picker via `onShowFileChooser` |
+| Insert link, new tag | native dialog via `onJsPrompt` |
+| Read aloud | Android `TextToSpeech` |
+| Print / save as PDF | Android print framework (choose *Save as PDF*) |
+| Export image / .txt / backup | written into **Downloads** via `MediaStore` |
+| Share, copy text | Android share sheet and clipboard |
+
 ## Notes and limitations
 
 - Everything is stored in your browser's / WebView's local storage. There is no account and
   no sync. Use **Profile → Export all notes** to back up.
 - Storage is limited to roughly 5 MB, so images are downscaled on insert.
-- The release APK is signed with a debug key for easy side-loading. Generate your own keystore
-  before distributing through an app store.
+- The APK is signed with a keystore generated for this project and stored as an encrypted
+  GitHub Actions secret. It is fine for side-loading; generate your own keystore before
+  publishing to an app store.
+- Saving exports needs Android 10+ to land in Downloads without asking. On Android 8–9 the app
+  asks for storage permission once.
 - The 36 fonts load from Google Fonts the first time you open the font picker. Offline, the app
   falls back to the system font — everything else works normally.
 

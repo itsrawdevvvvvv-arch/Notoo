@@ -156,22 +156,43 @@ img{-webkit-user-drag:none;user-select:none}
 }
 
 /* ---------------- Screens ---------------- */
-/* ONE transition for every screen change. Transform + opacity only, so the
-   whole thing runs on the compositor — no layout, paint or blur per frame. */
+/* ONE transition for every screen change: a plain cross-fade. Opacity only —
+   no transform, no blur, nothing that can stutter. */
 .screen{
   position:absolute;inset:0;
   display:flex;flex-direction:column;
   background:var(--app-bg);
-  transform:translateY(12px);
   opacity:0;visibility:hidden;
-  transition:transform .3s var(--ease), opacity .24s var(--ease), visibility .3s;
+  transition:opacity .26s ease-in-out, visibility .26s;
   z-index:2;overflow:hidden;
-  backface-visibility:hidden;
 }
-.screen.active{transform:none;opacity:1;visibility:visible;z-index:5}
-.screen.behind{transform:none;opacity:0;visibility:visible;z-index:1}
-/* promote to its own layer only while a transition is actually in flight */
-.screen.animating{will-change:transform,opacity}
+.screen.active{opacity:1;visibility:visible;z-index:5}
+.screen.behind{opacity:0;visibility:visible;z-index:1}
+.screen.animating{will-change:opacity}
+
+/* ---- printing (Print / save as PDF) ---- */
+#printArea{display:none}
+@media print{
+  @page{margin:18mm 16mm}
+  body::before{display:none!important}
+  html,body{background:#fff!important;height:auto!important;overflow:visible!important;position:static!important}
+  #stage,#phone{position:static!important;width:auto!important;height:auto!important;
+    max-width:none!important;box-shadow:none!important;border-radius:0!important;padding:0!important;background:#fff!important}
+  #phone::after{display:none!important}
+  #phone > *:not(#printArea){display:none!important}
+  #printArea{display:block!important;font-family:var(--note-font,var(--ui-font));color:#111;line-height:1.65}
+  #printArea h1{font-size:26pt;font-weight:800;margin:0 0 6pt}
+  #printArea .pmeta{color:#777;font-size:9pt;border-bottom:1px solid #ddd;padding-bottom:8pt;margin-bottom:14pt}
+  #printArea h2{font-size:14pt;margin:16pt 0 6pt}
+  #printArea blockquote{border-left:3pt solid #D2703A;margin:10pt 0;padding-left:10pt;color:#555;font-style:italic}
+  #printArea img{max-width:100%}
+  #printArea .todo{display:flex;gap:8pt;align-items:flex-start;margin:4pt 0}
+  #printArea .todo span::before{content:"\2610  ";font-size:11pt}
+  #printArea .todo.done span{text-decoration:line-through;opacity:.6}
+  #printArea .todo.done span::before{content:"\2611  "}
+  #printArea .todo input{display:none}
+  #printArea ul,#printArea ol{padding-left:18pt}
+}
 
 /* ---------------- Scroll areas ---------------- */
 .scroll{
@@ -588,19 +609,20 @@ html[data-theme="dark"] .colordot.on{border-color:var(--accent-2)}
 
 /* floating format bar */
 .fmtbar{
-  position:absolute;left:14px;right:14px;
+  position:absolute;left:12px;right:12px;
   bottom:calc(env(safe-area-inset-bottom) + 12px);z-index:40;
   background:var(--card-bg);border:1px solid var(--app-line);
-  border-radius:var(--r-full);
-  padding:8px 10px;
-  display:flex;align-items:center;gap:2px;overflow-x:auto;scrollbar-width:none;
+  border-radius:22px;
+  padding:6px 8px;
+  display:flex;flex-direction:column;gap:4px;
   box-shadow:var(--sh-lg);
-  transform:translateY(170%);transition:transform .4s var(--ease);
+  transform:translateY(190%);transition:transform .32s var(--ease);
 }
-.fmtbar::-webkit-scrollbar{display:none}
 .fmtbar.on{transform:translateY(0)}
+.fbrow{display:flex;align-items:center;justify-content:center;gap:1px}
+.fbrow + .fbrow{border-top:1px solid var(--app-line);padding-top:4px}
 .fmtbar .fb{
-  width:38px;height:38px;border-radius:var(--r-full);display:grid;place-items:center;
+  width:38px;height:36px;border-radius:11px;display:grid;place-items:center;
   color:var(--brown-2);flex-shrink:0;transition:background .18s,color .18s,transform .15s;
 }
 .fmtbar .fb:active{transform:scale(.88)}
@@ -923,14 +945,7 @@ html[data-theme="dark"] .seg button.on{background:var(--accent);color:#fff}
 /* ============================================================
    ANIMATION STYLES  (set on <html data-anim="…">)
    ============================================================ */
-/* Every option below is transform/opacity only — nothing that forces a
-   repaint of a full-screen layer. */
-[data-anim="slide"] .screen{transform:translateX(100%);opacity:1}
-[data-anim="slide"] .screen.active{transform:none;opacity:1}
-[data-anim="slide"] .screen.behind{transform:translateX(-18%);opacity:.5}
-[data-anim="zoom"] .screen{transform:scale(.96);opacity:0}
-[data-anim="zoom"] .screen.active{transform:none;opacity:1}
-[data-anim="zoom"] .screen.behind{transform:scale(1.02);opacity:0}
+/* One fade everywhere. "Instant" simply removes the transition. */
 [data-anim="none"] .screen{transition:none}
 [data-anim="none"] .note-card{animation:none}
 [data-anim="none"] .sheet{transition:none}
@@ -1417,21 +1432,23 @@ html[data-theme="dark"] .tab-create{background:var(--accent)}
         <div class="editor-content" id="noteContent" contenteditable="true" data-ph="Start writing… tap the toolbar for formatting, checklists and images."></div>
       </div>
       <div class="fmtbar" id="fmtbar">
-        <button class="fb" data-cmd="bold" title="Bold"><svg><use href="#i-bold"/></svg></button>
-        <button class="fb" data-cmd="italic" title="Italic"><svg><use href="#i-italic"/></svg></button>
-        <button class="fb" data-cmd="underline" title="Underline"><svg><use href="#i-underline"/></svg></button>
-        <button class="fb" data-cmd="strikeThrough" title="Strike"><svg><use href="#i-strike"/></svg></button>
-        <div class="sep"></div>
-        <button class="fb" data-block="H2" title="Heading"><svg><use href="#i-h2"/></svg></button>
-        <button class="fb" data-cmd="insertUnorderedList" title="Bullets"><svg><use href="#i-ul"/></svg></button>
-        <button class="fb" data-cmd="insertOrderedList" title="Numbers"><svg><use href="#i-ol"/></svg></button>
-        <button class="fb" data-todo="1" title="Checklist"><svg><use href="#i-todo"/></svg></button>
-        <button class="fb" data-block="BLOCKQUOTE" title="Quote"><svg><use href="#i-quote"/></svg></button>
-        <div class="sep"></div>
-        <button class="fb" data-img="1" title="Image"><svg><use href="#i-image"/></svg></button>
-        <button class="fb" data-cmd="createLink" title="Link"><svg><use href="#i-link"/></svg></button>
-        <button class="fb" data-cmd="removeFormat" title="Clear"><svg><use href="#i-x"/></svg></button>
-        <button class="fb" id="fbKeyboard" title="Hide keyboard"><svg><use href="#i-down"/></svg></button>
+        <div class="fbrow">
+          <button class="fb" data-cmd="bold" title="Bold"><svg><use href="#i-bold"/></svg></button>
+          <button class="fb" data-cmd="italic" title="Italic"><svg><use href="#i-italic"/></svg></button>
+          <button class="fb" data-cmd="underline" title="Underline"><svg><use href="#i-underline"/></svg></button>
+          <button class="fb" data-cmd="strikeThrough" title="Strike"><svg><use href="#i-strike"/></svg></button>
+          <button class="fb" data-block="H2" title="Heading"><svg><use href="#i-h2"/></svg></button>
+          <button class="fb" data-cmd="insertUnorderedList" title="Bullets"><svg><use href="#i-ul"/></svg></button>
+          <button class="fb" data-cmd="insertOrderedList" title="Numbers"><svg><use href="#i-ol"/></svg></button>
+          <button class="fb" data-todo="1" title="Checklist"><svg><use href="#i-todo"/></svg></button>
+          <button class="fb" data-block="BLOCKQUOTE" title="Quote"><svg><use href="#i-quote"/></svg></button>
+        </div>
+        <div class="fbrow">
+          <button class="fb" data-img="1" title="Insert image"><svg><use href="#i-image"/></svg></button>
+          <button class="fb" data-cmd="createLink" title="Insert link"><svg><use href="#i-link"/></svg></button>
+          <button class="fb" data-cmd="removeFormat" title="Clear formatting"><svg><use href="#i-x"/></svg></button>
+          <button class="fb" id="fbKeyboard" title="Hide toolbar &amp; keyboard"><svg><use href="#i-down"/></svg></button>
+        </div>
       </div>
     </section>
 
@@ -1615,12 +1632,6 @@ html[data-theme="dark"] .tab-create{background:var(--accent)}
         <div class="set-group">
           <div class="glabel">Motion</div>
           <div class="set-card">
-            <div class="set-row" style="padding:14px 16px">
-              <div class="si"><svg><use href="#i-sparkle"/></svg></div>
-              <div class="sl">Animation style</div>
-              <button class="sv" id="animValue">Slide</button>
-              <svg class="chev"><use href="#i-down"/></svg>
-            </div>
             <button class="set-row" id="rowReduceMotion">
               <div class="si"><svg><use href="#i-eye"/></svg></div>
               <div class="sl">Reduce motion<small>Calmer, fewer animations</small></div>
@@ -1747,6 +1758,7 @@ html[data-theme="dark"] .tab-create{background:var(--accent)}
         <button class="menu-item" data-note-act="copytext"><div class="mi-ic"><svg><use href="#i-copy"/></svg></div><div class="mi-label">Copy text</div></button>
         <button class="menu-item" data-note-act="read"><div class="mi-ic"><svg><use href="#i-sparkle"/></svg></div><div class="mi-label">Read aloud<small>Speak this note</small></div></button>
         <button class="menu-item" data-note-act="print"><div class="mi-ic"><svg><use href="#i-download"/></svg></div><div class="mi-label">Print / save as PDF</div></button>
+        <button class="menu-item" data-note-act="txt"><div class="mi-ic"><svg><use href="#i-notebook"/></svg></div><div class="mi-label">Export as .txt<small>Plain text file</small></div></button>
         <button class="menu-item" data-note-act="png"><div class="mi-ic"><svg><use href="#i-image"/></svg></div><div class="mi-label">Export as image</div></button>
         <button class="menu-item" data-note-act="archive"><div class="mi-ic"><svg><use href="#i-archive"/></svg></div><div class="mi-label">Archive<small id="archiveLabel">Hide from the list</small></div></button>
         <button class="menu-item danger" data-note-act="delete"><div class="mi-ic"><svg><use href="#i-trash"/></svg></div><div class="mi-label">Move to trash</div></button>
@@ -1810,6 +1822,8 @@ html[data-theme="dark"] .tab-create{background:var(--accent)}
       </div>
     </div>
 
+    <div id="printArea"></div>
+
     <div class="toast" id="toast"><svg><use href="#i-check"/></svg><span id="toastMsg">Saved</span></div>
 
     <input type="file" id="importFile" accept="application/json,.json" class="hidden">
@@ -1851,6 +1865,67 @@ function lighten(hex, amt){
   let r=(n>>16)&255, g=(n>>8)&255, b=n&255;
   r=Math.round(r+(255-r)*amt); g=Math.round(g+(255-g)*amt); b=Math.round(b+(255-b)*amt);
   return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+
+/* ============================================================
+   NATIVE BRIDGE
+   The Android shell exposes window.NotooNative. Everything below falls
+   back to the plain browser API when it is absent (web / PWA).
+   ============================================================ */
+const HAS_NATIVE = (typeof window !== 'undefined') && !!window.NotooNative;
+function nativeCall(fn, ...args){
+  if(!HAS_NATIVE) return false;
+  try{ window.NotooNative[fn].apply(window.NotooNative, args); return true; }catch(e){ return false; }
+}
+function browserDownload(name, blob){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
+}
+function saveBlob(name, blob){
+  if(HAS_NATIVE && blob && blob.size){
+    const r = new FileReader();
+    r.onload = ()=>{
+      const b64 = String(r.result || '').split(',')[1] || '';
+      if(b64 && nativeCall('saveBase64', name, blob.type || 'application/octet-stream', b64)){
+        toast('Saved to Downloads','i-download');
+      } else {
+        browserDownload(name, blob);
+        toast('Downloading ' + name,'i-download');
+      }
+    };
+    r.onerror = ()=>{ browserDownload(name, blob); };
+    r.readAsDataURL(blob);
+    return;
+  }
+  browserDownload(name, blob);
+  toast('Downloading ' + name,'i-download');
+}
+function safeName(s, ext){
+  const base = String(s || 'notoo').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').slice(0, 60) || 'notoo';
+  return base + ext;
+}
+function copyText(text){
+  if(nativeCall('copy', text)) return;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>toast('Text copied')).catch(()=>toast('Could not copy','i-x'));
+    return;
+  }
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); toast('Text copied'); }catch(e){ toast('Could not copy','i-x'); }
+  ta.remove();
+}
+function shareText(subject, text){
+  if(nativeCall('shareText', subject, text)) return;
+  if(navigator.share){ navigator.share({title:subject, text:text}).catch(()=>{}); return; }
+  copyText(text);
 }
 
 /* ---------------- storage ---------------- */
@@ -2513,15 +2588,12 @@ function renderSettings(){
   const ac = $('#archiveCount');
   if(ac){ const an = notes.filter(n=>n.archived && !n.trashed).length; ac.textContent = an ? an + ' item' + (an>1?'s':'') : 'Empty'; }
   const af = $('#appFontLabel'); if(af) af.textContent = settings.appFont || 'Poppins';
-  const av = $('#animValue');
-  if(av){ const a = (typeof ANIM_STYLES !== 'undefined') && ANIM_STYLES.find(x => x.id === (settings.anim||'slide')); av.textContent = a ? a.name : 'Slide'; }
   const sm = $('#swMotion'); if(sm) sm.classList.toggle('on', !!settings.reduceMotion);
   const fc = $('#fontCountLabel'); if(fc && typeof FONTS !== 'undefined') fc.textContent = FONTS.length + ' fonts to choose from';
   applyTheme(); applyAccent();
 }
 $('#rowAppFont').addEventListener('click', ()=> openFontSheet('app'));
 $('#rowFontCount').addEventListener('click', ()=> openFontSheet('app'));
-$('#animValue').addEventListener('click', ()=> pickAnim());
 $('#rowReduceMotion').addEventListener('click', ()=>{
   settings.reduceMotion = !settings.reduceMotion; saveSettings(); applyMotion(); renderSettings();
   toast(settings.reduceMotion ? 'Motion reduced' : 'Motion on','i-eye');
@@ -2691,7 +2763,16 @@ function syncFmtButtons(){
   });
 }
 document.addEventListener('selectionchange', ()=>{ if(currentScreen==='screen-note') syncFmtButtons(); });
-$('#fbKeyboard').addEventListener('click', ()=>{ $('#noteContent').blur(); $('#fmtbar').classList.remove('on'); });
+/* Hide the toolbar + keyboard.
+   stopPropagation matters: this button is inside #fmtbar, so without it the
+   delegated toolbar handler would bubble afterwards, re-focus the editor and
+   immediately show the bar again. */
+$('#fbKeyboard').addEventListener('click', e=>{
+  e.stopPropagation();
+  $('#noteContent').blur();
+  $('#fmtbar').classList.remove('on');
+  toast('Toolbar hidden — tap the text to bring it back','i-down');
+});
 
 /* note image */
 $('#noteImgFile').addEventListener('change', e=>{
@@ -2772,22 +2853,21 @@ $('#noteSheet').addEventListener('click', e=>{
   } else if(act==='share'){
     shareNote(n);
   } else if(act==='copytext'){
-    const txt = (n.title?n.title+'\n\n':'') + stripHtml(n.html||'');
-    navigator.clipboard?.writeText(txt).then(()=>toast('Text copied')).catch(()=>toast('Could not copy'));
+    copyText((n.title?n.title+'\n\n':'') + stripHtml(n.html||''));
+  } else if(act==='txt'){
+    exportNoteTxt(n);
   } else if(act==='delete'){
     trashNote(n.id, true);
   }
 });
 function shareNote(n){
   const txt = (n.title? n.title+'\n\n':'') + stripHtml(n.html||'');
-  if(navigator.share){ navigator.share({title:n.title||'Note', text:txt}).catch(()=>{}); }
-  else { downloadFile((n.title||'note')+'.txt', txt); toast('Exported note'); }
+  if(HAS_NATIVE){ shareText(n.title || 'Notoo note', txt); return; }
+  if(navigator.share){ navigator.share({title:n.title||'Note', text:txt}).catch(()=>{}); return; }
+  downloadFile(safeName(n.title, '.txt'), txt);
 }
 function downloadFile(name, text){
-  const blob = new Blob([text], {type:'text/plain'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = name; a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href), 3000);
+  saveBlob(name, new Blob([text], {type:'text/plain'}));
 }
 function trashNote(id, withUndo){
   const n = findNote(id); if(!n) return;
@@ -2955,13 +3035,9 @@ function openTrash(){
   listSheet('Trash', trashed.length + ' item' + (trashed.length>1?'s':''), items);
 }
 function exportAll(){
-  const data = JSON.stringify({app:'Notoo', version:1, exported:nowISO(), notes, settings}, null, 2);
-  const blob = new Blob([data], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'notoo-backup-'+new Date().toISOString().slice(0,10)+'.json';
-  a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 3000);
-  toast('Backup downloaded');
+  const data = JSON.stringify({app:'Notoo', version:3, exported:nowISO(), notes, settings}, null, 2);
+  saveBlob('notoo-backup-'+new Date().toISOString().slice(0,10)+'.json',
+           new Blob([data], {type:'application/json'}));
 }
 $('#importFile').addEventListener('change', e=>{
   const f = e.target.files[0]; if(!f) return;
@@ -4077,12 +4153,7 @@ async function exportBoardPng(){
   els.forEach(el => drawElToCtx(ctx, el, imgs[el.id]));
   cnv.toBlob(b => {
     if(!b){ toast('Export failed','i-x'); return; }
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(b);
-    a.download = (($('#canvasTitle').value || 'canvas').replace(/[^\w\-]+/g,'_')) + '.png';
-    a.click();
-    setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
-    toast('Board exported','i-download');
+    saveBlob(safeName($('#canvasTitle').value || 'canvas-board', '.png'), b);
   }, 'image/png');
 }
 $('#canvasTitle').addEventListener('input', debounce(()=>{
@@ -4280,27 +4351,11 @@ $('#fontSearch').addEventListener('input', debounce(renderFontList, 120));
 /* ============================================================
    2. MOTION
    ============================================================ */
-const ANIM_STYLES = [
-  {id:'smooth', name:'Smooth',  sub:'Quick fade + rise (recommended)'},
-  {id:'slide',  name:'Slide',   sub:'Classic side push'},
-  {id:'zoom',   name:'Zoom',    sub:'Scales in gently'},
-  {id:'none',   name:'Instant', sub:'No animation'}
-];
-
 function applyMotion(){
   const root = document.documentElement;
-  let a = settings.anim || 'smooth';
-  if(!ANIM_STYLES.some(x => x.id === a)) a = 'smooth';   // migrate retired styles
-  root.setAttribute('data-anim', a);
+  root.setAttribute('data-anim', settings.reduceMotion ? 'none' : 'fade');
   root.setAttribute('data-motion', settings.reduceMotion ? 'off' : 'on');
-  root.style.setProperty('--anim-dur', (settings.reduceMotion || a === 'none') ? '.001ms' : '.3s');
-}
-function pickAnim(){
-  listSheet('Animation style','How screens and sheets move', ANIM_STYLES.map(a=>({
-    label:a.name, sub:a.sub, icon:'i-sparkle', active:(settings.anim||'slide')===a.id,
-    onClick:()=>{ settings.anim = a.id; saveSettings(); applyMotion(); renderSettings();
-      toast(a.name + ' animation'); }
-  })));
+  root.style.setProperty('--anim-dur', settings.reduceMotion ? '.001ms' : '.26s');
 }
 
 /* ============================================================
@@ -4416,7 +4471,6 @@ const PAL_ACTIONS = [
   {label:'Surprise me',     sub:'Open a random note',         icon:'i-sparkle',   run:openRandom},
   {label:'Search notes',    sub:'Go to search',               icon:'i-search',    run:()=>switchTab('search')},
   {label:'Change app font', sub:FONTS.length + ' fonts to try', icon:'i-font',    run:()=>openFontSheet('app')},
-  {label:'Animation style', sub:'Change transitions',         icon:'i-sparkle',   run:pickAnim},
   {label:'Toggle theme',    sub:'Light / dark / sepia',       icon:'i-moon',      run:toggleTheme},
   {label:'Toggle layout',   sub:'Grid or list',               icon:'i-grid',      run:toggleLayout},
   {label:'Archive',         sub:'Notes you have put away',     icon:'i-archive',   run:openArchive},
@@ -4578,42 +4632,52 @@ function openArchive(){
    ============================================================ */
 let speaking = false;
 function speakNote(n){
-  if(!('speechSynthesis' in window)){ toast('Speech not supported here','i-x'); return; }
+  const text = ((n.title ? n.title + '. ' : '') + stripHtml(n.html || '')).trim();
+  if(!text){ toast('Nothing to read'); return; }
   if(speaking){
-    window.speechSynthesis.cancel();
     speaking = false;
+    if(!nativeCall('stopSpeak')){
+      try{ window.speechSynthesis.cancel(); }catch(e){}
+    }
     toast('Stopped reading','i-x');
     return;
   }
-  const text = ((n.title ? n.title + '. ' : '') + stripHtml(n.html || '')).trim();
-  if(!text){ toast('Nothing to read'); return; }
-  const u = new SpeechSynthesisUtterance(text);
-  u.rate = 0.98; u.pitch = 1;
-  u.onend = ()=>{ speaking = false; };
-  u.onerror = ()=>{ speaking = false; };
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(u);
-  speaking = true;
-  toast('Reading aloud — tap again to stop','i-sparkle');
+  if(HAS_NATIVE){
+    if(nativeCall('speak', text)){
+      speaking = true;
+      toast('Reading aloud — tap again to stop','i-sparkle');
+      return;
+    }
+  }
+  if('speechSynthesis' in window){
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.98; u.pitch = 1;
+    u.onend = ()=>{ speaking = false; };
+    u.onerror = ()=>{ speaking = false; };
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+    speaking = true;
+    toast('Reading aloud — tap again to stop','i-sparkle');
+    return;
+  }
+  toast('Speech is not available on this device','i-x');
 }
 function printNote(n){
-  const w = window.open('', '_blank');
-  if(!w){ toast('Allow pop-ups to print','i-x'); return; }
-  const title = n.title || 'Untitled note';
-  w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>' + esc(title) + '</title><style>' +
-    'body{font-family:' + fontStack(n.font) + ';max-width:720px;margin:46px auto;padding:0 24px;color:#2E1F17;line-height:1.7}' +
-    'h1{font-size:32px;font-weight:800;margin:0 0 6px;letter-spacing:-.5px}h2{font-size:20px;margin:22px 0 8px}' +
-    '.meta{color:#8A7466;font-size:12px;margin-bottom:26px;border-bottom:1px solid #E7DCCB;padding-bottom:14px}' +
-    '.todo{display:flex;gap:8px;align-items:flex-start;margin:5px 0}.todo input{margin-top:4px}' +
-    '.todo.done span{text-decoration:line-through;opacity:.6}' +
-    'blockquote{border-left:3px solid #D2703A;margin:12px 0;padding-left:14px;color:#6B5545;font-style:italic}' +
-    'img{max-width:100%;border-radius:10px}ul,ol{padding-left:22px}' +
-    '</style></head><body><h1>' + esc(title) + '</h1><div class="meta">Notoo &middot; ' +
-    fmtDate(n.updated) + '</div>' + (n.html || '') + '</body></html>');
-  w.document.close();
-  w.focus();
-  setTimeout(()=>{ try{ w.print(); }catch(e){} }, 420);
+  const area = $('#printArea');
+  area.innerHTML = '<h1>' + esc(n.title || 'Untitled note') + '</h1>' +
+    '<div class="pmeta">Notoo &middot; ' + fmtDate(n.updated) +
+    (n.tag ? ' &middot; ' + esc(n.tag) : '') + '</div>' + (n.html || '');
+  area.querySelectorAll('.todo input').forEach(cb => {
+    cb.closest('.todo').classList.toggle('done', !!cb.checked);
+  });
   toast('Opening print dialog','i-download');
+  setTimeout(()=>{
+    if(!nativeCall('printPage')){
+      try{ window.print(); }
+      catch(e){ toast('Printing is not available here','i-x'); }
+    }
+    setTimeout(()=>{ area.innerHTML = ''; }, 1500);
+  }, 80);
 }
 function exportNotePng(n){
   const W = 900, PAD = 60, LINE = 40;
@@ -4641,13 +4705,30 @@ function exportNotePng(n){
   x.fillText('Notoo \u00b7 ' + fmtDate(n.updated), PAD, H - PAD + 2);
   c.toBlob(b => {
     if(!b){ toast('Export failed','i-x'); return; }
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(b);
-    a.download = ((n.title || 'note').replace(/[^\w\-]+/g,'_')) + '.png';
-    a.click();
-    setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
-    toast('Image saved','i-download');
+    saveBlob(safeName(n.title, '.png'), b);
   }, 'image/png');
+}
+
+/* ---- plain-text export ---- */
+function exportNoteTxt(n){
+  let body = (n.html || '')
+    .replace(/<input[^>]*checked[^>]*>/gi, '[x] ')
+    .replace(/<input[^>]*type=["']checkbox["'][^>]*>/gi, '[ ] ')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '\u2022 ')
+    .replace(/<\/(p|div|li|h[1-6]|blockquote|tr)>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  const out = [];
+  if(n.title) out.push(n.title, '');
+  out.push(body);
+  out.push('', '\u2014 Notoo \u00b7 ' + fmtDate(n.updated));
+  saveBlob(safeName(n.title, '.txt'), new Blob([out.join('\n')], {type:'text/plain'}));
 }
 
 /* ============================================================

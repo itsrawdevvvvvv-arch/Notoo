@@ -3,6 +3,11 @@ android/.gradle/
 android/build/
 android/app/build/
 android/local.properties
+# signing key — provided by CI from the NOTOO_KEYSTORE_B64 secret
+android/notoo-release.p12
+*.jks
+*.keystore
+*.p12
 *.iml
 .idea/
 .gradle/

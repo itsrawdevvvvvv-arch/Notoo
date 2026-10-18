@@ -40,6 +40,17 @@ jobs:
           echo "sdk.dir=$SDK" > android/local.properties
           ls "$SDK/platforms" || true
 
+      - name: Install the signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.NOTOO_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            printf '%s' "$KEYSTORE_B64" | base64 -d > android/notoo-release.p12
+            echo "Wrote release keystore ($(wc -c < android/notoo-release.p12) bytes)."
+          else
+            echo "::warning::NOTOO_KEYSTORE_B64 is not set — builds will use a throwaway key and cannot update an existing install."
+          fi
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
@@ -87,8 +98,9 @@ jobs:
                (Settings → Apps → Special access → Install unknown apps).
             3. Open the file and install.
 
-            `Notoo-app-debug.apk` is a debug build — it installs alongside the release
-            build under a separate package name, handy for testing.
+            `Notoo-app-debug.apk` is the same app built with debug symbols — handy if
+            something misbehaves, since it can be attached to a debugger.
 
-            The release APK is signed with the standard Android debug key so it can be
-            side-loaded. It is not signed for Play Store distribution.
+            Both APKs share the package name `com.notoo.app` and a stable signing key,
+            so each new release installs straight over the previous one and keeps your
+            notes.

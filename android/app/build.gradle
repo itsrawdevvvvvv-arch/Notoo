@@ -2,6 +2,12 @@ plugins {
     id 'com.android.application'
 }
 
+// A stable keystore is decoded into android/notoo-release.p12 by CI from the
+// NOTOO_KEYSTORE_B64 secret. When it is absent (e.g. a local build) we fall
+// back to the throwaway debug key so the build still works.
+def ksFile = file('../notoo-release.p12')
+def hasKs = ksFile.exists()
+
 android {
     namespace 'com.notoo.app'
     compileSdk 34
@@ -10,20 +16,29 @@ android {
         applicationId "com.notoo.app"
         minSdk 26
         targetSdk 34
-        versionCode 3
-        versionName "3.0.0"
+        versionCode 4
+        versionName "3.1.0"
+    }
+
+    signingConfigs {
+        release {
+            if (hasKs) {
+                storeFile ksFile
+                storePassword System.getenv("NOTOO_STORE_PW") ?: "notoo-release"
+                keyAlias System.getenv("NOTOO_KEY_ALIAS") ?: "notoo"
+                keyPassword System.getenv("NOTOO_KEY_PW") ?: "notoo-release"
+            }
+        }
     }
 
     buildTypes {
         debug {
-            applicationIdSuffix ".debug"
-            versionNameSuffix "-debug"
+            if (hasKs) { signingConfig signingConfigs.release }
         }
         release {
             minifyEnabled false
-            // Side-loadable release build. Replace with your own keystore
-            // (or configure signing in CI secrets) before publishing to a store.
-            signingConfig signingConfigs.debug
+            if (hasKs) { signingConfig signingConfigs.release }
+            else { signingConfig signingConfigs.debug }
         }
     }
 
