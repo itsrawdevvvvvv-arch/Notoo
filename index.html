@@ -1250,6 +1250,8 @@ html[data-theme="dark"] .tab-create{background:var(--accent)}
 
 
 
+
+
 /* ============================================================
    REDESIGN LAYER
    Warm paper, botanical, hand-drawn — matches the four reference
@@ -1319,7 +1321,7 @@ html[data-theme="dark"] .iconbtn{color:var(--mustard)}
 .sec-head h2{font-family:var(--display);font-weight:600;font-size:23px;letter-spacing:-.5px;color:var(--app-ink)}
 .sec-head .count{font-family:var(--body);font-weight:800;font-size:12px;background:var(--mustard);color:#3A2E14;
   border-radius:999px;padding:2px 9px;min-width:22px;text-align:center}
-.sec-head .link{background:var(--action);color:#fff;border-radius:999px;padding:8px 18px;
+.sec-head .link{background:var(--accent);color:#fff;border-radius:999px;padding:8px 18px;
   font-family:var(--body);font-weight:800;font-size:13px;border:0;
   box-shadow:0 5px 14px rgba(220,123,88,.30)}
 
@@ -1351,13 +1353,13 @@ html[data-theme="dark"] .note-card .cardsub .tag{background:var(--sage);color:#2
 .circle .cav{width:70px;height:70px;border:0;font-family:var(--display);font-weight:600;font-size:27px;
   box-shadow:0 5px 14px rgba(51,71,47,.14)}
 .circle span{font-family:var(--body);font-weight:800;font-size:12px;color:var(--app-ink)}
-.circle.on .cav{border:0;box-shadow:0 0 0 3px var(--app-bg),0 0 0 6px var(--action)}
+.circle.on .cav{border:0;box-shadow:0 0 0 3px var(--app-bg),0 0 0 6px var(--accent)}
 
 /* ---------- chips ---------- */
 .chip{background:var(--card-bg);border:1.5px solid var(--line);border-radius:999px;
   padding:10px 19px;font-family:var(--body);font-weight:800;font-size:13.5px;color:var(--app-ink);
   box-shadow:0 2px 7px rgba(51,71,47,.07)}
-.chip.on{background:var(--forest);border-color:var(--forest);color:#F6EEDA;box-shadow:0 5px 14px rgba(51,71,47,.24)}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#F6EEDA;box-shadow:0 5px 14px rgba(51,71,47,.24)}
 html[data-theme="dark"] .chip.on{background:var(--sage);border-color:var(--sage);color:#22301F}
 
 /* ---------- search ---------- */
@@ -1387,8 +1389,8 @@ html[data-theme="dark"] .chip.on{background:var(--sage);border-color:var(--sage)
 .tab span{position:relative;z-index:1;font-weight:800}
 .tab.on{color:var(--forest);background:none;box-shadow:none}
 .tab.on::before{content:'';position:absolute;top:1px;left:50%;transform:translateX(-50%);
-  width:50px;height:50px;border-radius:50%;background:var(--forest);z-index:0}
-.tab.on svg{color:var(--mustard)}
+  width:50px;height:50px;border-radius:50%;background:var(--accent);z-index:0}
+.tab.on svg{color:var(--app-bg)}
 html[data-theme="dark"] .tab.on{color:#22301F}
 html[data-theme="dark"] .tab.on::before{background:var(--sage)}
 html[data-theme="dark"] .tab.on svg{color:#22301F}
@@ -1433,13 +1435,13 @@ html[data-theme="dark"] .set-group .glabel{color:var(--sage)}
 
 .seg{background:var(--paper-3);border-radius:999px;padding:3px;display:inline-flex;gap:2px}
 .seg button{font-family:var(--body);font-weight:800;font-size:12.5px;padding:7px 15px;border-radius:999px;color:var(--muted)}
-.seg button.on{background:var(--forest);color:#F6EEDA;box-shadow:none}
+.seg button.on{background:var(--accent);color:#F6EEDA;box-shadow:none}
 html[data-theme="dark"] .seg button.on{background:var(--sage);color:#22301F}
 
 .theme-row{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;padding:4px 0 0}
 .theme-swatch{border-radius:20px;padding:11px 6px 9px;border:2.5px solid transparent;background:var(--paper-3);
   display:flex;flex-direction:column;align-items:center;gap:8px;transition:transform .15s var(--ease)}
-.theme-swatch.on{border-color:var(--action);background:var(--card-bg)}
+.theme-swatch.on{border-color:var(--accent);background:var(--card-bg)}
 .theme-swatch:active{transform:scale(.95)}
 .theme-swatch .sw-bar{display:flex;gap:5px;height:44px;width:100%;padding:0 4px}
 .theme-swatch .sw-bar i{flex:1;border-radius:9px;display:block}
@@ -1457,7 +1459,7 @@ input[type="range"]{-webkit-appearance:none;appearance:none;height:7px;border-ra
 input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;
   background:var(--mustard);border:3px solid var(--card-bg);box-shadow:0 2px 7px rgba(51,71,47,.24)}
 .switch{background:var(--sage-2)}
-.switch.on{background:var(--forest)}
+.switch.on{background:var(--accent)}
 
 /* ---------- empty states ---------- */
 .empty h3{font-family:var(--display);font-weight:600;font-size:22px;color:var(--app-ink)}
@@ -1590,11 +1592,27 @@ html[data-theme="dark"] .sp-bar{background:#3A4A34}
   flex:1;border-radius:999px;padding:11px 14px;font-family:var(--body);font-weight:800;font-size:13px;
   background:var(--paper-3);color:var(--forest);border:0;transition:transform .14s var(--ease);
 }
-.conn-btn.primary{background:var(--action);color:#fff;box-shadow:0 5px 14px rgba(220,123,88,.28)}
+.conn-btn.primary{background:var(--accent);color:#fff;box-shadow:0 5px 14px rgba(220,123,88,.28)}
 .conn-btn.ghost{background:none;color:var(--forest);text-decoration:underline;font-size:12px;padding:6px}
 .conn-btn:active{transform:scale(.97)}
 .conn-btn[disabled]{opacity:.45}
 html[data-theme="dark"] .conn-field input{background:var(--paper-3);color:var(--app-ink)}
+
+/* ============================================================
+   VIEWPORT ROBUSTNESS
+   Android WebViews and mobile browsers disagree about how tall
+   100vh is (the URL bar, the keyboard, display cutouts). Pin the
+   app to a height we measure ourselves so no screen can end short
+   and leave a band of page background showing.
+   ============================================================ */
+:root{ --app-h:100vh; }
+@supports (height:100dvh){ :root{ --app-h:100dvh; } }
+html,body{height:100%;overscroll-behavior:none}
+#stage{height:var(--app-h);min-height:100%}
+#phone{height:100%;min-height:0}
+.screen{min-height:0}
+.canvas-stage{min-height:0}
+@media (min-width:520px){ #phone{height:min(880px,calc(var(--app-h) - 44px))} }
 
 </style>
 </head><body>
@@ -2079,21 +2097,29 @@ html[data-theme="dark"] .conn-field input{background:var(--paper-3);color:var(--
           <div class="glabel">AI Connector</div>
           <div class="set-card" style="padding:16px 16px 14px">
             <div class="conn-status" id="connStatus">Not connected</div>
-            <p class="conn-help">Link a private GitHub repo and the Notoo MCP server can read and build your notes and boards — ask your assistant to make a mood board and it appears here.</p>
-            <label class="conn-field"><span>Repository</span><input id="connRepo" type="text" placeholder="yourname/notoo-sync" autocomplete="off" spellcheck="false"></label>
-            <label class="conn-field"><span>Access token</span><input id="connToken" type="password" placeholder="github_pat_…" autocomplete="off" spellcheck="false"></label>
-            <label class="conn-field"><span>File</span><input id="connPath" type="text" placeholder="notoo.json" autocomplete="off" spellcheck="false"></label>
-            <label class="conn-field"><span>Branch</span><input id="connBranch" type="text" placeholder="main" autocomplete="off" spellcheck="false"></label>
+            <p class="conn-help">Paste a GitHub token once and tap Connect — Notoo makes its own private storage for you. Then your assistant can read and build your notes and boards.</p>
+            <label class="conn-field"><span>GitHub token</span><input id="connToken" type="password" placeholder="github_pat_…" autocomplete="off" spellcheck="false"></label>
             <div class="conn-actions">
-              <button class="conn-btn" id="connTest" data-conn>Test</button>
-              <button class="conn-btn" id="connPull" data-conn>Pull</button>
-              <button class="conn-btn primary" id="connPush" data-conn>Send</button>
+              <button class="conn-btn primary" id="connConnect">Connect</button>
+              <button class="conn-btn" id="connSyncBtn" data-conn>Sync now</button>
+            </div>
+            <button class="conn-btn ghost" id="connAdvanced" style="margin-top:8px">Advanced settings</button>
+            <div id="connMore" class="hidden">
+              <label class="conn-field"><span>Repository</span><input id="connRepo" type="text" placeholder="yourname/notoo-sync" autocomplete="off" spellcheck="false"></label>
+              <label class="conn-field"><span>File</span><input id="connPath" type="text" placeholder="notoo.json" autocomplete="off" spellcheck="false"></label>
+              <label class="conn-field"><span>Branch</span><input id="connBranch" type="text" placeholder="main" autocomplete="off" spellcheck="false"></label>
+              <div class="conn-actions">
+                <button class="conn-btn" id="connTest" data-conn>Test</button>
+                <button class="conn-btn" id="connPull" data-conn>Pull</button>
+                <button class="conn-btn" id="connPush" data-conn>Send</button>
+              </div>
             </div>
             <button class="set-row" id="connAutoRow" style="padding:12px 0 2px;background:none">
               <div class="sl">Auto-sync<small>Send changes a few seconds after you stop editing</small></div>
               <div class="switch" id="connAuto"></div>
             </button>
             <button class="conn-btn ghost" id="connCopy" style="margin-top:10px">Copy Claude Desktop config</button>
+            <p class="conn-help" style="margin:10px 0 0"><b>One-time setup:</b> GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → generate one with <b>Contents: Read and write</b>, then paste it above.</p>
           </div>
         </div>
 
@@ -2160,7 +2186,7 @@ html[data-theme="dark"] .conn-field input{background:var(--paper-3);color:var(--
             </button>
             <button class="set-row" id="rowAbout">
               <div class="si"><svg><use href="#i-info"/></svg></div>
-              <div class="sl">Notoo<small>Version 3.7 · Notes &amp; Canvas</small></div>
+              <div class="sl">Notoo<small>Version 3.7.1 · Notes &amp; Canvas</small></div>
               <svg class="chev"><use href="#i-right"/></svg>
             </button>
             <button class="set-row" id="rowKeys">
@@ -5253,6 +5279,7 @@ function connReady(){
   const c = conn();
   return Boolean(c.repo && c.token && /^[\w.-]+\/[\w.-]+$/.test(c.repo));
 }
+function connHasToken(){ return Boolean(conn().token); }
 function connHeaders(){
   const c = conn();
   return {
@@ -5393,6 +5420,49 @@ async function connTest(){
   connBusy = false; connRender();
 }
 
+
+/* Creates (or reuses) a private repo for the user, so the only thing they
+   ever have to paste is a token. */
+async function connConnect(){
+  const c = conn();
+  if(!c.token){ toast('Paste your GitHub token first'); return; }
+  if(connBusy) return;
+  connBusy = true; connRender();
+  try{
+    const me = await fetch('https://api.github.com/user', { headers: connHeaders() });
+    if(me.status === 401) throw new Error('That token was rejected');
+    if(!me.ok) throw new Error('GitHub ' + me.status);
+    const user = await me.json();
+    if(!c.repo){
+      const name = 'notoo-sync';
+      const create = await fetch('https://api.github.com/user/repos', {
+        method:'POST',
+        headers: { ...connHeaders(), 'Content-Type':'application/json' },
+        body: JSON.stringify({ name, private:true, auto_init:true, description:'Private Notoo notes storage' })
+      });
+      if(create.status === 422){
+        // already exists — just use it
+        c.repo = user.login + '/' + name;
+      } else if(create.ok){
+        const repo = await create.json();
+        c.repo = repo.full_name;
+      } else {
+        const t = await create.text().catch(()=> '');
+        throw new Error('Could not create storage: ' + create.status + ' ' + t.slice(0,80));
+      }
+    }
+    c.path = c.path || 'notoo.json';
+    c.branch = c.branch || 'main';
+    c.sha = null;
+    saveSettings();
+    // write directly — connPush() would bail out because we are already busy
+    await connFetchRemote().catch(()=> null);
+    await connWriteRemote(connSnapshot());
+    toast('Connected — your notes are backed up');
+  }catch(e){ toast(String(e.message || e), 'i-x'); }
+  connBusy = false; connRender();
+}
+
 /* ---- settings UI ---- */
 function connRender(){
   const c = conn();
@@ -5411,6 +5481,10 @@ function connRender(){
   const sw = document.getElementById('connAuto');
   if(sw) sw.classList.toggle('on', !!c.auto);
   document.querySelectorAll('[data-conn]').forEach(b=> b.disabled = connBusy || !connReady());
+  const cb = document.getElementById('connConnect');
+  if(cb){ cb.disabled = connBusy || !connHasToken(); cb.textContent = connBusy ? 'Working…' : (connReady() ? 'Reconnect' : 'Connect'); }
+  const mb = document.getElementById('connMore');
+  if(mb && connReady() && !mb.dataset.shownOnce){ mb.dataset.shownOnce = '1'; }
 }
 function connBind(){
   const bind = (id, key) => {
@@ -5428,6 +5502,15 @@ function connBind(){
     if(c.auto) connAutoKick();
   });
   const wire = (id, fn) => { const b = document.getElementById(id); if(b) b.addEventListener('click', fn); };
+  wire('connConnect', connConnect);
+  wire('connSyncBtn', ()=> connSync(false));
+  const adv = document.getElementById('connAdvanced');
+  if(adv) adv.addEventListener('click', ()=>{
+    const m = document.getElementById('connMore');
+    if(!m) return;
+    m.classList.toggle('hidden');
+    adv.textContent = m.classList.contains('hidden') ? 'Advanced settings' : 'Hide advanced';
+  });
   wire('connTest', connTest);
   wire('connPull', ()=> connPull(false));
   wire('connPush', ()=> connPush(false));
@@ -6370,6 +6453,22 @@ document.addEventListener('click', e => {
   e.stopPropagation();
   removeCustomFont(del.dataset.delFont);
 });
+/* Measure the real visible height and feed it to the CSS. Re-runs when the
+   keyboard opens, the URL bar hides, or the device rotates. */
+function applyViewport(){
+  const vv = window.visualViewport;
+  const h = Math.round((vv && vv.height) || window.innerHeight || document.documentElement.clientHeight || 0);
+  if(h > 0) document.documentElement.style.setProperty('--app-h', h + 'px');
+}
+window.addEventListener('resize', applyViewport);
+window.addEventListener('orientationchange', ()=> setTimeout(applyViewport, 150));
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize', applyViewport);
+  window.visualViewport.addEventListener('scroll', applyViewport);
+}
+applyViewport();
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) applyViewport(); });
+
 (function featureBoot(){
   loadFonts();
   loadCustomFonts().then(() => { renderFontCats && null; });
