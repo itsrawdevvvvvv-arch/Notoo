@@ -54,6 +54,8 @@ offline.
 - Markdown-style typing: `-` bullet, `1.` numbered, `#` heading, `>` quote, `[]` task
 - Pin, star, colour, tag, and a due date with overdue badges
 - Type `#anything` in a note and it becomes that note's tag automatically
+- Pick **several images at once** — they land one after another in a note, or laid out
+  in a tidy non-overlapping grid on a canvas
 - Archive (separate from Trash), search, sort, grid/list layout
 - Read aloud, print / save as PDF, export as a PNG, JSON backup and restore
 
@@ -65,8 +67,14 @@ offline.
 - Alignment guides that snap objects into line as you drag
 - Undo / redo, fit-to-screen, export the whole board as a PNG
 
+**Art**
+- **872 stickers** in two styles — hand-drawn and flat — plus **372 interface icons**
+- Search, category chips and style tabs in the picker; drop them into a note or onto a canvas
+- All bundled offline from real open-source sets (see *Credits* below)
+
 **The rest**
-- **36 fonts** to choose from — app-wide, per note, or per canvas object
+- **36 fonts** built in, plus **add your own** — drop in any `.ttf`, `.otf` or `.woff2`
+  from your device and it appears in the font list, saved for next time
 - One clean fade transition between screens, plus a reduce-motion switch
 - Light, dark, sepia themes and six accent colours
 - Command palette (Ctrl/⌘ + K) and keyboard shortcuts
@@ -116,6 +124,22 @@ icon-*.png, icon.svg        app icons
 android/                    Android WebView wrapper
 .github/workflows/          APK build + release pipeline
 ```
+
+## Credits
+
+Notoo bundles artwork from open-source projects. The interface icons and the
+sticker library are **not** original to this project:
+
+| Set | What it provides | Licence |
+|---|---|---|
+| [OpenMoji](https://openmoji.org) | Hand-drawn stickers | CC BY-SA 4.0 |
+| [Microsoft Fluent Emoji](https://github.com/microsoft/fluentui-emoji) | Flat stickers | MIT |
+| [Lucide](https://lucide.dev) | Interface icons | ISC |
+| [Iconify](https://iconify.design) | Packaging and delivery of the icon data | MIT |
+
+The sticker artwork is redistributed unmodified under its own licence (CC BY-SA 4.0 for
+OpenMoji), separate from this project's MIT licence on the code. Attribution is also shown
+in the app under **Profile → Artwork credits**.
 
 ## Android notes
 
