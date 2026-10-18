@@ -47,6 +47,28 @@ offline.
 
 ---
 
+## AI connector
+
+Notoo can be driven by an AI assistant. Ask Claude or ChatGPT to *"make a mood
+board from these images"* and it builds the board — images laid out in a grid,
+a title, and node-style connections between them — and it appears in the app.
+
+It works through **MCP** (the Model Context Protocol). The app and a small
+connector server both read and write the same JSON document, so either side sees
+the other's changes.
+
+1. Create a **private** GitHub repo and a fine-grained token with **Contents:
+   Read and write** for that repo only.
+2. In the app: **Profile → AI Connector** → paste the repo and token → **Test**
+   → **Send**.
+3. Install the connector and point your assistant at it — full instructions in
+   [`mcp/README.md`](mcp/README.md).
+
+The connector exposes 24 tools covering the whole app: notes, tags, boards,
+text, stickies, shapes, images, stickers, pen strokes, connections, and
+backgrounds — plus `create_mood_board` for building a board from a list of
+image URLs in one step.
+
 ## What it does
 
 **Notes**

@@ -1,0 +1,14 @@
+{
+  "name": "notoo-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MCP connector for the Notoo notes & canvas app",
+  "type": "module",
+  "bin": { "notoo-mcp": "notoo-mcp.mjs" },
+  "main": "notoo-mcp.mjs",
+  "scripts": { "start": "node notoo-mcp.mjs" },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4"
+  }
+}

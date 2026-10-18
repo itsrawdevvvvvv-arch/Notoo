@@ -684,10 +684,11 @@ html[data-theme="dark"] #screen-canvas{background:#1C130D}
 .canvas-stage.penning{cursor:crosshair}
 .canvas-world{
   position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform;
+  contain:layout style;
 }
 .ce{
   position:absolute;left:0;top:0;transform-origin:50% 50%;touch-action:none;
-  user-select:none;-webkit-user-select:none;will-change:transform;
+  user-select:none;-webkit-user-select:none;
 }
 .ce.text{
   min-width:60px;min-height:30px;padding:4px 6px;color:#fff;
@@ -704,8 +705,21 @@ html[data-theme="dark"] #screen-canvas{background:#1C130D}
   content:"";position:absolute;top:0;left:0;right:0;height:7px;
   background:rgba(0,0,0,.07);border-radius:6px 6px 0 0;
 }
-.ce.image{overflow:hidden;border-radius:4px;box-shadow:0 6px 18px rgba(0,0,0,.3)}
-.ce.image img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.ce.image{overflow:hidden;border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.3)}
+.ce.image img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}
+/* only promote to its own layer while the user is actually dragging it */
+.ce.live{will-change:transform}
+
+/* ---------------- node connections ---------------- */
+.linklayer{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;
+  pointer-events:none;z-index:0}
+.linklayer .ln{fill:none;stroke-linecap:round;stroke-width:3;pointer-events:none}
+.linklayer .ln-hit{fill:none;stroke:transparent;stroke-width:26;pointer-events:stroke;cursor:pointer}
+.linklayer .lng.on .ln{stroke-dasharray:9 7}
+.linklayer .lng.armed .ln{stroke-dasharray:6 6;animation:linkMarch .6s linear infinite}
+@keyframes linkMarch{to{stroke-dashoffset:-24}}
+.linklayer .ln-dot{pointer-events:none}
+
 .ce.shape{border:2px solid #fff}
 .ce.shape.rect{border-radius:2px}
 .ce.shape.ellipse{border-radius:50%}
@@ -1220,8 +1234,402 @@ html[data-theme="dark"] .tab-create{background:var(--accent)}
 .brand{display:flex;align-items:center;gap:10px}
 .brand-art{width:50px;height:50px;margin-top:-6px;transform:rotate(-8deg);
   filter:drop-shadow(0 5px 10px rgba(67,41,29,.18))}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ============================================================
+   REDESIGN LAYER
+   Warm paper, botanical, hand-drawn — matches the four reference
+   screens. Overrides the token layer only; no behaviour lives here.
+   ============================================================ */
+:root{
+  --paper:#F6EEDA; --paper-2:#FCF6E7; --paper-3:#EFE4CC; --paper-4:#E3D6BA;
+  --forest:#33472F; --forest-2:#283A25; --forest-3:#48603F;
+  --sage:#9BA37D; --sage-2:#C6CCAF; --sage-3:#E7E9D8;
+  --coral:#DC7B58; --coral-2:#E79070; --coral-3:#F5CDBC;
+  --mustard:#E4B05E; --mustard-2:#F1CE90;
+  --pink:#D89C90; --clay:#8A6148;
+
+  --cream:#F6EEDA; --cream-2:#FCF6E7; --cream-3:#EFE4CC;
+  --white:#FCF6E7;
+  --ink:#33472F; --ink-2:#5A6A4E; --muted:#8D9479;
+  --line:#E4D9C0; --line-2:#D6C9AC;
+  --tan:#9BA37D; --tan-2:#8C9470; --tan-3:#7E8665;
+  --brown:#33472F; --brown-2:#283A25; --brown-3:#1F2E1D;
+  --ok:#5F7F4A; --danger:#C4644A;
+  --accent-2:#E79070;
+  --action:#DC7B58;
+  --action-2:#E79070;
+  --r-xs:12px; --r-sm:16px; --r-md:20px; --r-lg:24px; --r-xl:30px;
+  --sh:0 6px 18px rgba(51,71,47,.10);
+  --sh-lg:0 14px 34px rgba(51,71,47,.16);
+  --sh-sm:0 3px 10px rgba(51,71,47,.09);
+  --sh-brown:0 5px 14px rgba(51,71,47,.22);
+  /* both follow the user's App font setting, so switching it actually changes
+     the interface — Fredoka/Nunito are just the shipped defaults */
+  --ui-font:'Fredoka';
+  --display:var(--ui-font),'Fredoka','Poppins',system-ui,sans-serif;
+  --body:var(--ui-font),'Nunito','Poppins',system-ui,sans-serif;
+  --dash:data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2022%2018%27%20fill%3D%27none%27%3E%0A%3Cg%20stroke%3D%27%23E4B05E%27%20stroke-width%3D%273.4%27%20stroke-linecap%3D%27round%27%3E%0A%3Cpath%20d%3D%27M2%2013L9%209%27%2F%3E%3Cpath%20d%3D%27M7%2016L14%2015%27%2F%3E%3Cpath%20d%3D%27M11%203L16%208%27%2F%3E%0A%3C%2Fg%3E%3C%2Fsvg%3E;
+  --grain:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='150' height='150' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  --wavemask:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 96' preserveAspectRatio='none'%3E%3Cpath d='M0 34 C50 20 90 50 140 34 C190 18 230 50 280 36 C330 22 370 48 400 32 L400 96 L0 96 Z' fill='%23fff'/%3E%3C/svg%3E")
+}
+html[data-theme="sepia"]{
+  --app-bg:#F3EAD6; --card-bg:#FBF4E3; --app-ink:#3E4A33; --app-muted:#8C9276;
+  --app-line:#E4D8BE; --app-sub:#EDE3CB;
+  --white:#FBF4E3; --ink:#3E4A33; --muted:#8C9276; --line:#E4D8BE; --line-2:#D8CBAE;
+}
+html[data-theme="dark"]{
+  --app-bg:#1F2A1D; --card-bg:#2A3726; --app-ink:#F1EEDD; --app-muted:#9AA48A;
+  --app-line:#3A4A34; --app-sub:#243020;
+  --white:#2A3726; --ink:#F1EEDD; --muted:#9AA48A; --line:#3A4A34; --line-2:#45543E;
+  --forest:#DCE7CE; --paper:#1F2A1D; --paper-2:#2A3726; --paper-3:#243020;
+}
+
+/* ---------- paper surface ---------- */
+body{background:var(--app-bg);font-family:var(--body)}
+.screen{background-color:var(--app-bg);background-image:var(--grain)}
+#phone{background:var(--app-bg)}
+body::before{background:var(--app-bg)!important;background-image:var(--grain)!important;opacity:1!important}
+
+/* ---------- headings ---------- */
+.topbar{padding:18px 22px 12px}
+.topbar h1{font-family:var(--display);font-weight:600;font-size:35px;letter-spacing:-.9px;line-height:1.06;color:var(--app-ink)}
+.topbar .sub{font-family:var(--body);font-weight:700;font-size:13.5px;color:var(--sage);margin-top:3px}
+html[data-theme="dark"] .topbar .sub{color:var(--app-muted)}
+.iconbtn{width:47px;height:47px;border-radius:16px;background:var(--card-bg);border:0;
+  box-shadow:0 3px 10px rgba(51,71,47,.11);color:var(--forest)}
+.iconbtn svg{width:21px;height:21px}
+html[data-theme="dark"] .iconbtn{color:var(--mustard)}
+
+.sec-head{padding:6px 22px 12px}
+.sec-head h2{font-family:var(--display);font-weight:600;font-size:23px;letter-spacing:-.5px;color:var(--app-ink)}
+.sec-head .count{font-family:var(--body);font-weight:800;font-size:12px;background:var(--mustard);color:#3A2E14;
+  border-radius:999px;padding:2px 9px;min-width:22px;text-align:center}
+.sec-head .link{background:var(--action);color:#fff;border-radius:999px;padding:8px 18px;
+  font-family:var(--body);font-weight:800;font-size:13px;border:0;
+  box-shadow:0 5px 14px rgba(220,123,88,.30)}
+
+/* ---------- note cards ---------- */
+.note-card.media-card{border:0;border-radius:23px;background:var(--card-bg);padding:9px 9px 4px;
+  box-shadow:0 6px 18px rgba(51,71,47,.10)}
+.note-card.media-card:active{transform:scale(.975);box-shadow:0 3px 10px rgba(51,71,47,.12)}
+.card-media{border-radius:17px;overflow:hidden;background:var(--paper-3)}
+.note-card.media-card .body-col{padding:11px 7px 12px}
+.note-card.media-card h3{font-family:var(--display);font-weight:600;font-size:19.5px;line-height:1.18;
+  letter-spacing:-.3px;color:var(--app-ink);margin-bottom:7px}
+.note-card .cardsub{font-family:var(--body);font-weight:700;font-size:12px;color:var(--muted);gap:7px;
+  overflow:hidden;white-space:nowrap}
+.note-card .cardsub > span:last-child{flex-shrink:0}
+.note-card .cardsub .tag{background:var(--sage-2);color:var(--forest);border-radius:999px;
+  padding:4px 11px;font-family:var(--body);font-size:10px;font-weight:800;
+  letter-spacing:.7px;text-transform:uppercase;max-width:56%;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="dark"] .note-card .cardsub .tag{background:var(--sage);color:#22301F}
+.card-media .mediabadge{background:rgba(46,63,42,.93);color:#F4EEDA;border-radius:999px;
+  padding:5px 11px;font-family:var(--body);font-weight:800;font-size:11px;gap:5px}
+.card-media .mediabadge svg{width:13px;height:13px}
+.card-media .pinbadge{background:var(--forest);color:var(--mustard)}
+.card-media .papertext{font-family:var(--body)}
+
+/* ---------- tag circles ---------- */
+.circlerow{gap:15px;padding:14px 22px 16px}
+.circle{width:70px;gap:9px}
+.circle .cav{width:70px;height:70px;border:0;font-family:var(--display);font-weight:600;font-size:27px;
+  box-shadow:0 5px 14px rgba(51,71,47,.14)}
+.circle span{font-family:var(--body);font-weight:800;font-size:12px;color:var(--app-ink)}
+.circle.on .cav{border:0;box-shadow:0 0 0 3px var(--app-bg),0 0 0 6px var(--action)}
+
+/* ---------- chips ---------- */
+.chip{background:var(--card-bg);border:1.5px solid var(--line);border-radius:999px;
+  padding:10px 19px;font-family:var(--body);font-weight:800;font-size:13.5px;color:var(--app-ink);
+  box-shadow:0 2px 7px rgba(51,71,47,.07)}
+.chip.on{background:var(--forest);border-color:var(--forest);color:#F6EEDA;box-shadow:0 5px 14px rgba(51,71,47,.24)}
+html[data-theme="dark"] .chip.on{background:var(--sage);border-color:var(--sage);color:#22301F}
+
+/* ---------- search ---------- */
+.searchfield{background:var(--card-bg);border:1.5px solid var(--line);border-radius:999px;
+  padding:14px 18px;box-shadow:0 3px 10px rgba(51,71,47,.07)}
+.searchfield input{font-family:var(--body);font-weight:600;font-size:14.5px}
+.searchfield input::placeholder{font-family:var(--body);font-weight:600;color:var(--muted)}
+.searchfield svg{color:var(--sage)}
+
+/* ---------- bottom navigation ---------- */
+.tabbar{
+  left:14px;right:14px;height:78px;padding:0 6px;border:0;
+  border-radius:0 0 30px 30px;background:var(--card-bg);
+  box-shadow:0 14px 30px rgba(51,71,47,.20);
+}
+/* a same-coloured rippled strip sitting just above the bar, so the two merge
+   into one wavy-topped surface without masking the bar itself */
+.tabbar::before{
+  content:'';position:absolute;left:0;right:0;top:-26px;height:28px;
+  background:var(--card-bg);
+  filter:drop-shadow(0 -3px 5px rgba(51,71,47,.16));
+  -webkit-mask:var(--wavemask) 0 0/100% 100% no-repeat;
+  mask:var(--wavemask) 0 0/100% 100% no-repeat;
+}
+.tab{position:relative;z-index:2;font-family:var(--body);font-weight:800;font-size:10.5px;color:var(--sage);gap:4px}
+.tab svg{width:23px;height:23px;position:relative;z-index:1}
+.tab span{position:relative;z-index:1;font-weight:800}
+.tab.on{color:var(--forest);background:none;box-shadow:none}
+.tab.on::before{content:'';position:absolute;top:1px;left:50%;transform:translateX(-50%);
+  width:50px;height:50px;border-radius:50%;background:var(--forest);z-index:0}
+.tab.on svg{color:var(--mustard)}
+html[data-theme="dark"] .tab.on{color:#22301F}
+html[data-theme="dark"] .tab.on::before{background:var(--sage)}
+html[data-theme="dark"] .tab.on svg{color:#22301F}
+.tab-create{width:62px;height:62px;border-radius:50%;background:var(--action);color:#fff;
+  margin-top:-30px;border:0;box-shadow:0 7px 16px rgba(220,123,88,.34);
+  position:relative;z-index:3}
+.tab-create svg{width:27px;height:27px;color:#fff}
+
+/* ---------- profile ---------- */
+.settings-hero{margin:2px 20px 6px;border-radius:30px;padding:22px 20px 16px;background:var(--forest);
+  color:#F6EEDA;display:flex;gap:15px;align-items:flex-start;
+  box-shadow:0 12px 30px rgba(51,71,47,.22)}
+.settings-hero::after{display:none}
+.settings-hero .avatar{width:74px;height:74px;border-radius:50%;background:var(--mustard);
+  color:var(--forest);font-family:var(--display);font-weight:600;font-size:34px;display:grid;place-items:center;flex-shrink:0}
+.settings-hero h2{font-family:var(--display);font-weight:600;font-size:25px;letter-spacing:-.5px;color:#F8F3E4}
+.settings-hero p{font-family:var(--body);font-weight:600;font-size:13px;color:rgba(246,238,218,.72);margin-top:2px}
+.settings-hero .stat{display:flex;gap:0;margin-top:16px;border-top:1px solid rgba(246,238,218,.2);padding-top:13px}
+.settings-hero .stat > div{flex:1;text-align:center}
+.settings-hero .stat > div + div{border-left:1px solid rgba(246,238,218,.2)}
+.settings-hero .stat b{font-family:var(--display);font-weight:600;font-size:22px;color:#F8F3E4;display:block;line-height:1}
+.settings-hero .stat span{font-family:var(--body);font-weight:700;font-size:11.5px;color:rgba(246,238,218,.66)}
+html[data-theme="dark"] .settings-hero{background:#2E3D29}
+html[data-theme="dark"] .settings-hero .avatar{background:var(--mustard);color:#2A3726}
+html[data-theme="dark"] .settings-hero h2,
+html[data-theme="dark"] .settings-hero .stat b{color:#F1EEDD}
+
+.set-group{margin:0 20px 14px}
+.set-group .glabel{font-family:var(--body);font-weight:800;font-size:12px;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--forest);padding:20px 4px 11px}
+html[data-theme="dark"] .set-group .glabel{color:var(--sage)}
+.set-card{background:var(--card-bg);border-radius:24px;overflow:hidden;border:0;
+  box-shadow:0 5px 16px rgba(51,71,47,.09)}
+.set-row{padding:15px 18px;gap:13px}
+.set-row + .set-row{border-top:1px solid var(--line)}
+.set-row:active{background:var(--paper-3)}
+.set-row .si{width:38px;height:38px;border-radius:12px;background:var(--paper-3);color:var(--forest)}
+.set-row .sl{font-family:var(--display);font-weight:500;font-size:16.5px;color:var(--app-ink);letter-spacing:-.1px}
+.set-row .sl small{font-family:var(--body);font-weight:600;font-size:12px;color:var(--muted);margin-top:2px}
+.set-row .sv{font-family:var(--body);font-weight:800;font-size:13px;color:var(--forest)}
+.set-row .chev{color:var(--muted)}
+
+.seg{background:var(--paper-3);border-radius:999px;padding:3px;display:inline-flex;gap:2px}
+.seg button{font-family:var(--body);font-weight:800;font-size:12.5px;padding:7px 15px;border-radius:999px;color:var(--muted)}
+.seg button.on{background:var(--forest);color:#F6EEDA;box-shadow:none}
+html[data-theme="dark"] .seg button.on{background:var(--sage);color:#22301F}
+
+.theme-row{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;padding:4px 0 0}
+.theme-swatch{border-radius:20px;padding:11px 6px 9px;border:2.5px solid transparent;background:var(--paper-3);
+  display:flex;flex-direction:column;align-items:center;gap:8px;transition:transform .15s var(--ease)}
+.theme-swatch.on{border-color:var(--action);background:var(--card-bg)}
+.theme-swatch:active{transform:scale(.95)}
+.theme-swatch .sw-bar{display:flex;gap:5px;height:44px;width:100%;padding:0 4px}
+.theme-swatch .sw-bar i{flex:1;border-radius:9px;display:block}
+.theme-swatch span{font-family:var(--body);font-weight:800;font-size:11.5px;color:var(--app-ink)}
+.theme-swatch[data-theme="dark"] span{color:#F1EEDD}
+
+.accent-row{gap:15px;padding:6px 2px 4px;overflow-x:auto;scrollbar-width:none}
+.accent-row::-webkit-scrollbar{display:none}
+.accent-dot{width:42px;height:42px;border-radius:50%;flex-shrink:0;border:0;
+  box-shadow:0 3px 10px rgba(51,71,47,.16)}
+.accent-dot.on{box-shadow:0 0 0 2.5px var(--card-bg),0 0 0 5px var(--app-ink)}
+
+input[type="range"]{-webkit-appearance:none;appearance:none;height:7px;border-radius:999px;
+  background:var(--sage-2);outline:none;flex-shrink:0}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;
+  background:var(--mustard);border:3px solid var(--card-bg);box-shadow:0 2px 7px rgba(51,71,47,.24)}
+.switch{background:var(--sage-2)}
+.switch.on{background:var(--forest)}
+
+/* ---------- empty states ---------- */
+.empty h3{font-family:var(--display);font-weight:600;font-size:22px;color:var(--app-ink)}
+.empty p{font-family:var(--body);font-weight:600;font-size:13.5px;color:var(--muted);line-height:1.55}
+.artimg{width:124px;height:124px}
+
+/* ---------- decoration ---------- */
+.deco{position:absolute;pointer-events:none;z-index:0}
+.deco-hd{position:absolute;top:22px;right:130px;width:48px;height:56px;pointer-events:none;z-index:0}
+.deco-tr{position:absolute;top:10px;right:16px;width:66px;pointer-events:none;z-index:0}
+.deco-bl{position:absolute;left:-4px;bottom:78px;width:100px;height:157px;pointer-events:none;z-index:0;opacity:.9}
+.deco-br{position:absolute;right:-6px;bottom:86px;width:112px;pointer-events:none;z-index:0;opacity:.9}
+.screen .scroll{position:relative;z-index:1}
+.screen .topbar{position:relative;z-index:2}
+
+/* ---------- sheets ---------- */
+.sheet{border-radius:30px 30px 0 0;background:var(--card-bg);border:0;
+  box-shadow:0 -12px 40px rgba(51,71,47,.22)}
+.sheet h2{font-family:var(--display);font-weight:600;font-size:22px;color:var(--app-ink);letter-spacing:-.4px}
+.sheet-sub{font-family:var(--body);font-weight:600;font-size:13px;color:var(--muted)}
+.menu-item{border-radius:18px}
+.menu-item .mi-label{font-family:var(--display);font-weight:500;font-size:16px;color:var(--app-ink)}
+.menu-item .mi-label small{font-family:var(--body);font-weight:600;font-size:12px;color:var(--muted)}
+.menu-item .mi-ic{background:var(--paper-3);color:var(--forest);border-radius:13px}
+.grabber{background:var(--line-2)}
+.toast{font-family:var(--body);font-weight:700}
+
+/* heading doodle marks */
+.sec-head h2::after{content:'';display:inline-block;width:20px;height:15px;margin-left:9px;
+  vertical-align:middle;background:var(--dash) no-repeat center/contain;opacity:.95}
+.topbar h1::after{content:'';display:inline-block;width:22px;height:16px;margin-left:10px;
+  vertical-align:super;background:var(--dash) no-repeat center/contain;opacity:.95}
+
+/* ---------- fixes found in review ---------- */
+.tswatch{display:grid;place-items:center;height:54px}
+
+/* the swipe-delete panel sits behind the card — match its radius so it can't
+   peek out at the new rounded corners */
+.card-del{border-radius:23px}
+.screen .topbar h1::after{vertical-align:super}
+@media (max-width:360px){
+  .topbar h1{font-size:31px}
+  .theme-row{gap:8px}
+}
+
+/* tighten the vertical rhythm so the tag row clears the floating bar */
+.card-media{aspect-ratio:1.62/1}
+.sec-head{padding:2px 22px 11px}
+.note-card.media-card .body-col{padding:10px 7px 11px}
+.circlerow{padding:14px 22px 16px}
+
+/* reserve space for the floating bar so content can never sit behind it */
+#screen-home .scroll,#screen-search .scroll,#screen-saved .scroll,#screen-settings .scroll{margin-bottom:106px}
+#screen-home .pad-b,#screen-search .pad-b,#screen-saved .pad-b,#screen-settings .pad-b{height:10px}
+
+/* ============================================================
+   SPLASH
+   Shown instantly from markup, animated with transform/opacity only,
+   then removed from the DOM so it costs nothing afterwards.
+   ============================================================ */
+#splash{
+  position:fixed;inset:0;z-index:9999;display:grid;place-items:center;
+  background:var(--app-bg);background-image:var(--grain);
+  transition:opacity .42s cubic-bezier(.22,1,.36,1),visibility .42s;
+}
+#splash.gone{opacity:0;visibility:hidden;pointer-events:none}
+.sp-inner{display:flex;flex-direction:column;align-items:center}
+.sp-flower{width:78px;height:92px;animation:spBloom .85s cubic-bezier(.34,1.56,.64,1) both}
+.sp-word{
+  font-family:var(--display);font-weight:600;font-size:42px;letter-spacing:-1.2px;
+  color:var(--forest);margin-top:6px;animation:spUp .55s .16s cubic-bezier(.22,1,.36,1) both;
+}
+.sp-sub{
+  font-family:var(--body);font-weight:700;font-size:12.5px;color:var(--sage);
+  margin-top:2px;animation:spUp .55s .24s cubic-bezier(.22,1,.36,1) both;
+}
+.sp-bar{
+  width:132px;height:5px;border-radius:999px;background:var(--sage-3);
+  overflow:hidden;margin-top:26px;animation:spUp .55s .32s cubic-bezier(.22,1,.36,1) both;
+}
+.sp-bar i{
+  display:block;height:100%;width:42%;border-radius:999px;background:var(--action);
+  animation:spLoad 1.15s cubic-bezier(.4,0,.6,1) infinite;
+}
+.sp-leaf{
+  position:absolute;bottom:8%;width:120px;opacity:.9;
+  animation:spUp .8s .34s cubic-bezier(.22,1,.36,1) both;
+}
+.sp-leaf.l{left:-6px}
+.sp-leaf.r{right:-8px;transform:scaleX(-1)}
+@keyframes spBloom{from{opacity:0;transform:scale(.35) rotate(-26deg)}to{opacity:1;transform:none}}
+@keyframes spUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes spLoad{0%{transform:translateX(-130%)}100%{transform:translateX(320%)}}
+html[data-theme="dark"] .sp-word{color:var(--sage)}
+html[data-theme="dark"] .sp-bar{background:#3A4A34}
+@media (prefers-reduced-motion:reduce){
+  .sp-flower,.sp-word,.sp-sub,.sp-bar,.sp-leaf{animation:none}
+  .sp-bar i{animation:none;width:100%}
+}
+
+/* trim the Home rhythm so the tag row sits comfortably on a phone */
+.card-media{aspect-ratio:1.72/1}
+.sec-head{padding:2px 22px 9px}
+.circlerow{gap:14px;padding:13px 22px 14px}
+.circle{width:64px}
+.circle .cav{width:64px;height:64px;font-size:24px}
+
+/* own compositor layer for the element being drawn or dragged */
+.ce.live{will-change:transform}
+
+/* ---------- AI connector ---------- */
+.conn-status{
+  font-family:var(--body);font-weight:800;font-size:12.5px;color:var(--muted);
+  background:var(--paper-3);border-radius:999px;padding:7px 14px;display:inline-block;margin-bottom:10px;
+}
+.conn-status.ok{background:var(--sage-2);color:var(--forest)}
+.conn-help{font-family:var(--body);font-weight:600;font-size:12.5px;line-height:1.5;color:var(--muted);margin-bottom:12px}
+.conn-field{display:block;margin-bottom:10px}
+.conn-field span{
+  display:block;font-family:var(--body);font-weight:800;font-size:11px;letter-spacing:.8px;
+  text-transform:uppercase;color:var(--sage);margin-bottom:5px;
+}
+.conn-field input{
+  width:100%;background:var(--paper-3);border:1.5px solid var(--line);border-radius:14px;
+  padding:11px 13px;font-family:var(--body);font-weight:600;font-size:13.5px;color:var(--app-ink);
+}
+.conn-field input:focus{border-color:var(--action);background:var(--card-bg)}
+.conn-actions{display:flex;gap:9px;margin-top:12px}
+.conn-btn{
+  flex:1;border-radius:999px;padding:11px 14px;font-family:var(--body);font-weight:800;font-size:13px;
+  background:var(--paper-3);color:var(--forest);border:0;transition:transform .14s var(--ease);
+}
+.conn-btn.primary{background:var(--action);color:#fff;box-shadow:0 5px 14px rgba(220,123,88,.28)}
+.conn-btn.ghost{background:none;color:var(--forest);text-decoration:underline;font-size:12px;padding:6px}
+.conn-btn:active{transform:scale(.97)}
+.conn-btn[disabled]{opacity:.45}
+html[data-theme="dark"] .conn-field input{background:var(--paper-3);color:var(--app-ink)}
+
 </style>
 </head><body>
+<!-- ===================== SPLASH ===================== -->
+<div id="splash" aria-hidden="true">
+  <svg class="sp-leaf l" viewBox="0 0 70 110"><use href="#d-sprig"/></svg>
+  <svg class="sp-leaf r" viewBox="0 0 70 110"><use href="#d-sprig"/></svg>
+  <div class="sp-inner">
+    <svg class="sp-flower" viewBox="0 0 46 54"><use href="#d-flower"/></svg>
+    <div class="sp-word">Notoo</div>
+    <div class="sp-sub">Notes &amp; Canvas</div>
+    <div class="sp-bar"><i></i></div>
+  </div>
+</div>
+<script>
+(function(){
+  var sp = document.getElementById('splash');
+  if(!sp) return;
+  var t0 = (performance && performance.now) ? performance.now() : Date.now();
+  var done = false;
+  function hide(){
+    if(done) return; done = true;
+    var now = (performance && performance.now) ? performance.now() : Date.now();
+    var wait = Math.max(0, 560 - (now - t0));   /* let the animation read, then go */
+    setTimeout(function(){
+      sp.classList.add('gone');
+      setTimeout(function(){ if(sp.parentNode) sp.parentNode.removeChild(sp); }, 620);
+    }, wait);
+  }
+  if(document.readyState === 'complete') hide();
+  else window.addEventListener('load', hide);
+  setTimeout(hide, 2400);                        /* never hold the app up */
+})();
+</script>
+
 <!-- ===================== ICON SPRITE ===================== -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
 <defs>
@@ -1315,6 +1723,9 @@ html[data-theme="dark"] .tab-create{background:var(--accent)}
   <symbol id="i-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13.5 10.5 7a1.6 1.6 0 0 1 2.3 0l4.6 4.6a1.6 1.6 0 0 1 0 2.3L12 19.4a1.6 1.6 0 0 1-2.3 0L4 13.5z"/><path d="M20 16.6c0 1-.7 1.8-1.6 1.8s-1.6-.8-1.6-1.8 1.6-3.1 1.6-3.1 1.6 2.1 1.6 3.1z"/></symbol>
   <symbol id="i-front" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="3" width="12" height="12" rx="2.5"/><path d="M9 21h10a2 2 0 0 0 2-2V9"/></symbol>
   <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M15 3H5a2 2 0 0 0-2 2v10"/></symbol>
+  <symbol id="d-sprig" viewBox="0 0 70 110"><path d='M34 106C34 78 30 48 22 20' stroke='#7E8665' stroke-width='3.2' stroke-linecap='round' fill='none'/><path d='M22 22C11 24 4 36 7 47 19 44 25 32 22 22Z' fill='#8C9470'/><path d='M26 44C15 46 8 57 10 68 22 65 29 54 26 44Z' fill='#9BA37D'/><path d='M30 66C19 68 13 79 15 89 27 86 33 76 30 66Z' fill='#8C9470'/><path d='M36 30C46 30 53 39 52 49 41 48 35 39 36 30Z' fill='#A7AE86'/><path d='M40 54C50 54 57 63 56 73 45 72 39 63 40 54Z' fill='#9BA37D'/><circle cx='20' cy='16' r='4.4' fill='#E4B05E'/><circle cx='52' cy='22' r='3.4' fill='#DC7B58'/></symbol>
+  <symbol id="d-flower" viewBox="0 0 46 54"><path d='M23 26V50' stroke='#7E8665' stroke-width='3' stroke-linecap='round' fill='none'/><path d='M23 38C15 38 11 44 12 49 20 49 24 44 23 38Z' fill='#8C9470'/><circle cx='23' cy='7' r='6.6' fill='#EFC77E'/><circle cx='34' cy='14' r='6.6' fill='#EFC77E'/><circle cx='30' cy='27' r='6.6' fill='#EFC77E'/><circle cx='16' cy='27' r='6.6' fill='#EFC77E'/><circle cx='12' cy='14' r='6.6' fill='#EFC77E'/><circle cx='23' cy='17' r='5.2' fill='#E4B05E'/></symbol>
+  <symbol id="d-blossom" viewBox="0 0 60 60"><circle cx='30' cy='30' r='8' fill='#E4B05E'/><g fill='#DC7B58'><circle cx='30' cy='13' r='8'/><circle cx='45' cy='21' r='8'/><circle cx='43' cy='39' r='8'/><circle cx='30' cy='47' r='8'/><circle cx='17' cy='39' r='8'/><circle cx='15' cy='21' r='8'/></g><circle cx='30' cy='30' r='6' fill='#E4B05E'/></symbol>
 </defs>
 </svg>
 
@@ -1323,14 +1734,17 @@ html[data-theme="dark"] .tab-create{background:var(--accent)}
 
     <!-- ===================== HOME ===================== -->
     <section class="screen active" id="screen-home">
+      <svg class="deco deco-bl" aria-hidden="true"><use href="#d-sprig"/></svg>
+      <svg class="deco deco-br" aria-hidden="true"><use href="#d-sprig"/></svg>
+
       <div class="topbar">
         <div class="brand">
           <div>
             <h1>Notoo</h1>
             <div class="sub" id="homeSub">Your notes &amp; canvas</div>
           </div>
-          <img class="brand-art" src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2072%2072%22%3E%3Cpath%20fill%3D%22%23fcea2b%22%20d%3D%22M43.3%2020.5c0.275-0.645%201.45-3.29%201.92-3.86c2.59-3.14%207.54-3.34%207.54-3.34s0.742%204.9-1.85%208.04c-0.70.85-1.57%201.48-2.47%201.96l-1.860.85c0.816-0.435%203.59-1.63%204.57-1.76c4.04-0.504%207.78%202.75%207.78%202.75s-2.82%204.07-6.87%204.57c-1.50.187-2.97-0.145-4.21-0.637l-1.51-0.562c1.070.4%203.65%201.56%204.53%202.46c2.85%202.91%202.53%207.85%202.53%207.85s-4.950.219-7.8-2.69c-0.63-0.642-1.89-3.78-2.24-4.54l0.767%202.4c0.2380.7130.392%201.470.407%202.27c0.074%204.07-3.56%207.44-3.56%207.44s-3.75-3.24-3.82-7.31c-0.015-0.833%201.35-4.71%201.35-4.71l-1.14%202.62c-1.77%202.49-4.52%204.14-7.55%204.45c-0.9250.093-1.540.066-1.540.066s-0.323-4.94%202.53-7.85c0.828-0.846%201.83-1.43%202.84-1.83l1.71-0.71c-0.003%200-4.31%201.45-5.75%201.27c-4.04-0.506-6.87-4.57-6.87-4.57s3.73-3.25%207.78-2.75c0.8370.105%203.84%201.58%204.56%201.92l-2.21-1.21c-0.77-0.449-1.51-1.02-2.11-1.76c-2.59-3.14-1.85-8.04-1.85-8.04s4.950.2%207.54%203.34c0.5020.608%201.85%203.22%202.14%203.91l-0.91-1.94a7.7%207.7%200%200%201-0.507-2.55c-0.074-4.07%203.56-7.44%203.56-7.44s3.75%203.24%203.82%207.31a7.7%207.7%200%200%201-0.411%202.56%22%2F%3E%3Ccircle%20cx%3D%2240.8%22%20cy%3D%2226.2%22%20r%3D%225%22%20fill%3D%22%23f1b31c%22%2F%3E%3Cpath%20fill%3D%22%235c9e31%22%20d%3D%22M23.4%2039c2.34%202.87%201.65%207.32%201.65%207.32s-4.5-0.203-6.84-3.07s-1.65-7.32-1.65-7.32s4.50.206%206.84%203.07m13.3%2013.5c2.86-2.33%207.29-1.64%207.29-1.64s-0.203%204.48-3.06%206.82s-7.29%201.64-7.29%201.64s0.206-4.48%203.06-6.82%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%3E%3Ccircle%20cx%3D%2240.8%22%20cy%3D%2226.2%22%20r%3D%225%22%2F%3E%3Cpath%20d%3D%22M23.9%2038.6c2.79%203.41%201.96%208.71%201.96%208.71s-5.35-0.242-8.14-3.66s-1.96-8.71-1.96-8.71s5.350.245%208.14%203.66M43.3%2020.5c0.275-0.645%201.45-3.29%201.92-3.86c2.59-3.14%207.54-3.34%207.54-3.34s0.742%204.9-1.85%208.04c-0.70.85-1.57%201.48-2.47%201.96l-1.860.85c0.816-0.435%203.59-1.63%204.57-1.76c4.04-0.504%207.78%202.75%207.78%202.75s-2.82%204.07-6.87%204.57c-1.50.187-2.97-0.145-4.21-0.637l-1.51-0.562c1.070.4%203.65%201.56%204.53%202.46c2.85%202.91%202.53%207.85%202.53%207.85s-4.950.219-7.8-2.69c-0.63-0.642-1.89-3.78-2.24-4.54l0.767%202.4c0.2380.7130.392%201.470.407%202.27c0.074%204.07-3.56%207.44-3.56%207.44s-3.75-3.24-3.82-7.31c-0.015-0.833%201.35-4.71%201.35-4.71l-1.14%202.62c-1.77%202.49-4.52%204.14-7.55%204.45c-0.9250.093-1.540.066-1.540.066s-0.323-4.94%202.53-7.85c0.828-0.846%201.83-1.43%202.84-1.83l1.71-0.71c-0.003%200-4.31%201.45-5.75%201.27c-4.04-0.506-6.87-4.57-6.87-4.57s3.73-3.25%207.78-2.75c0.8370.105%203.84%201.58%204.56%201.92l-2.21-1.21c-0.77-0.449-1.51-1.02-2.11-1.76c-2.59-3.14-1.85-8.04-1.85-8.04s4.950.2%207.54%203.34c0.5020.608%201.85%203.22%202.14%203.91l-0.91-1.94a7.7%207.7%200%200%201-0.507-2.55c-0.074-4.07%203.56-7.44%203.56-7.44s3.75%203.24%203.82%207.31a7.7%207.7%200%200%201-0.411%202.56m-7.85%2033.5c3.41-2.79%208.71-1.96%208.71-1.96s-0.243%205.35-3.66%208.14s-8.71%201.96-8.71%201.96s0.245-5.35%203.66-8.14%22%2F%3E%3Cpath%20d%3D%22M34.4%2041c-3.44%203.55-7.68%2010.2-5.83%2020.7%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="" width="52" height="52">
         </div>
+        <svg class="deco deco-hd" aria-hidden="true"><use href="#d-flower"/></svg>
         <div class="actions">
           <button class="iconbtn" id="btnSearchGo" aria-label="Search">
             <svg><use href="#i-search"/></svg>
@@ -1366,17 +1780,6 @@ html[data-theme="dark"] .tab-create{background:var(--accent)}
         <div class="pad-b"></div>
       </div>
 
-      <div class="bottombar" id="homeFilters">
-        <div class="chiprow" id="filterChips">
-          <button class="chip on" data-filter="all">All</button>
-          <button class="chip" data-filter="note">Notes</button>
-          <button class="chip" data-filter="canvas">Canvas</button>
-          <button class="chip" data-filter="pinned">Pinned</button>
-          <button class="chip" data-filter="fav">Favourites</button>
-          <button class="chip" data-filter="due">Due</button>
-        </div>
-      </div>
-
       <nav class="tabbar" id="tabbar">
         <button class="tab on" data-tab="home"><svg><use href="#i-home-f"/></svg><span>Home</span></button>
         <button class="tab" data-tab="search"><svg><use href="#i-search"/></svg><span>Search</span></button>
@@ -1388,6 +1791,9 @@ html[data-theme="dark"] .tab-create{background:var(--accent)}
 
     <!-- ===================== SEARCH ===================== -->
     <section class="screen" id="screen-search">
+      <svg class="deco deco-bl" aria-hidden="true"><use href="#d-sprig"/></svg>
+      <svg class="deco deco-br" aria-hidden="true"><use href="#d-sprig"/></svg>
+
       <div class="topbar">
         <div><h1>Search</h1><div class="sub" id="searchSub">Find anything</div></div>
       </div>
@@ -1430,6 +1836,9 @@ html[data-theme="dark"] .tab-create{background:var(--accent)}
 
     <!-- ===================== SAVED ===================== -->
     <section class="screen" id="screen-saved">
+      <svg class="deco deco-bl" aria-hidden="true"><use href="#d-sprig"/></svg>
+      <svg class="deco deco-br" aria-hidden="true"><use href="#d-sprig"/></svg>
+
       <div class="topbar">
         <div><h1>Saved</h1><div class="sub" id="savedSub">Pinned &amp; favourites</div></div>
       </div>
@@ -1504,7 +1913,9 @@ html[data-theme="dark"] .tab-create{background:var(--accent)}
         <div class="canvas-grid" id="canvasGrid"></div>
         <div class="guide v" id="guideV"></div>
         <div class="guide h" id="guideH"></div>
-        <div class="canvas-world" id="canvasWorld"></div>
+        <div class="canvas-world" id="canvasWorld">
+          <svg class="linklayer" id="linkLayer" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
         <div class="sel-frame" id="selFrame">
           <div class="handle h-rot" data-h="rot"></div>
           <div class="handle h-tl" data-h="tl"></div>
@@ -1558,6 +1969,7 @@ html[data-theme="dark"] .tab-create{background:var(--accent)}
           <button class="tool" data-tool="text" title="Text"><svg><use href="#i-type"/></svg></button>
           <button class="tool" data-tool="sticky" title="Sticky note"><svg><use href="#i-sticky"/></svg></button>
           <button class="tool" data-tool="art" title="Stickers &amp; icons"><svg><use href="#i-sparkle"/></svg></button>
+          <button class="tool" data-tool="link" title="Connect two items"><svg><use href="#i-link"/></svg></button>
           <button class="tool" data-tool="image" title="Image"><svg><use href="#i-image"/></svg></button>
           <button class="tool" data-tool="shape" title="Shapes"><svg><use href="#i-shapes"/></svg></button>
           <button class="tool" data-tool="color" title="Colour"><svg><use href="#i-palette"/></svg></button>
@@ -1570,6 +1982,9 @@ html[data-theme="dark"] .tab-create{background:var(--accent)}
 
     <!-- ===================== SETTINGS ===================== -->
     <section class="screen" id="screen-settings">
+      <svg class="deco deco-bl" aria-hidden="true"><use href="#d-sprig"/></svg>
+      <svg class="deco deco-br" aria-hidden="true"><use href="#d-sprig"/></svg>
+
       <div class="topbar">
         <div><h1>Profile</h1><div class="sub">Settings &amp; preferences</div></div>
       </div>
@@ -1591,21 +2006,21 @@ html[data-theme="dark"] .tab-create{background:var(--accent)}
           <div class="glabel">Appearance</div>
           <div class="set-card" style="padding:16px">
             <div class="theme-row" id="themeRow">
-              <button class="theme-swatch" data-theme="light" style="background:#F4E9D7">
-                <div class="sw-bar"><i style="background:#43291D"></i><i style="background:#C99A5B"></i><i style="background:#fff"></i></div>
-                <span style="color:#2E1F17">Light</span>
+              <button class="theme-swatch on" data-theme="light" style="background:var(--paper-3)">
+                <div class="tswatch"><svg viewBox='0 0 40 40' width='40' height='40' fill='none'><circle cx='20' cy='20' r='8.5' fill='#E4B05E'/><g stroke='#E4B05E' stroke-width='2.6' stroke-linecap='round'><path d='M20 4v5M20 31v5M4 20h5M31 20h5M8.7 8.7l3.5 3.5M27.8 27.8l3.5 3.5M31.3 8.7l-3.5 3.5M12.2 27.8l-3.5 3.5'/></g></svg></div>
+                <span>Light</span>
               </button>
-              <button class="theme-swatch" data-theme="dark" style="background:#33251C">
-                <div class="sw-bar"><i style="background:#F6EDE0"></i><i style="background:#B98A4E"></i><i style="background:#241A13"></i></div>
-                <span style="color:#F6EDE0">Dark</span>
+              <button class="theme-swatch" data-theme="dark" style="background:#2E3D29">
+                <div class="tswatch"><svg viewBox='0 0 40 40' width='40' height='40' fill='none'><path d='M25 6a14 14 0 1 0 9 24A16 16 0 0 1 25 6Z' fill='#E4B05E'/><path d='M31 12l1.6 4.2 4.2 1.6-4.2 1.6L31 23.6l-1.6-4.2L25.2 17.8l4.2-1.6z' fill='#F1CE90'/></svg></div>
+                <span>Dark</span>
               </button>
-              <button class="theme-swatch" data-theme="auto" style="background:linear-gradient(135deg,#F4E9D7 50%,#33251C 50%)">
-                <div class="sw-bar"><i style="background:#43291D"></i><i style="background:#C99A5B"></i><i style="background:#fff"></i></div>
-                <span style="color:#43291D">Auto</span>
+              <button class="theme-swatch" data-theme="auto" style="background:var(--paper-3)">
+                <div class="tswatch"><svg viewBox='0 0 40 40' width='40' height='40' fill='none'><circle cx='20' cy='20' r='9' fill='#E4B05E'/><path d='M20 11a9 9 0 0 0 0 18Z' fill='#8C9470'/><g stroke='#8C9470' stroke-width='2.4' stroke-linecap='round'><path d='M20 4v4M6 20h4M30 20h4M9.5 9.5l3 3'/></g></svg></div>
+                <span>Auto</span>
               </button>
-              <button class="theme-swatch" data-theme="sepia" style="background:#F7EFE1">
-                <div class="sw-bar"><i style="background:#3B2C1D"></i><i style="background:#C9A063"></i><i style="background:#FFFCF5"></i></div>
-                <span style="color:#3B2C1D">Sepia</span>
+              <button class="theme-swatch" data-theme="sepia" style="background:#EFE0C6">
+                <div class="tswatch"><svg viewBox='0 0 40 40' width='40' height='40' fill='none'><path d='M10 32C10 18 20 8 33 8c0 14-10 24-23 24Z' fill='#8C9470'/><path d='M12 30L30 12' stroke='#6E7856' stroke-width='2.2' stroke-linecap='round'/><circle cx='31' cy='31' r='3.2' fill='#DC7B58'/></svg></div>
+                <span>Sepia</span>
               </button>
             </div>
           </div>
@@ -1615,12 +2030,12 @@ html[data-theme="dark"] .tab-create{background:var(--accent)}
           <div class="glabel">Accent colour</div>
           <div class="set-card" style="padding:16px">
             <div class="accent-row" id="accentRow">
-              <button class="accent-dot on" data-accent="#D2703A" style="background:#D2703A"></button>
-              <button class="accent-dot" data-accent="#5E8C4A" style="background:#5E8C4A"></button>
-              <button class="accent-dot" data-accent="#3C77B0" style="background:#3C77B0"></button>
-              <button class="accent-dot" data-accent="#B0563F" style="background:#B0563F"></button>
-              <button class="accent-dot" data-accent="#8A5BB0" style="background:#8A5BB0"></button>
-              <button class="accent-dot" data-accent="#C99A5B" style="background:#C99A5B"></button>
+              <button class="accent-dot on" data-accent="#33472F" style="background:#33472F"></button>
+              <button class="accent-dot" data-accent="#E4B05E" style="background:#E4B05E"></button>
+              <button class="accent-dot" data-accent="#DC7B58" style="background:#DC7B58"></button>
+              <button class="accent-dot" data-accent="#D89C90" style="background:#D89C90"></button>
+              <button class="accent-dot" data-accent="#9BA37D" style="background:#9BA37D"></button>
+              <button class="accent-dot" data-accent="#8A6148" style="background:#8A6148"></button>
             </div>
           </div>
         </div>
@@ -1657,6 +2072,28 @@ html[data-theme="dark"] .tab-create{background:var(--accent)}
               <div class="sl">Snap to grid<small>Align objects neatly</small></div>
               <div class="switch" id="swSnap"></div>
             </button>
+          </div>
+        </div>
+
+        <div class="set-group">
+          <div class="glabel">AI Connector</div>
+          <div class="set-card" style="padding:16px 16px 14px">
+            <div class="conn-status" id="connStatus">Not connected</div>
+            <p class="conn-help">Link a private GitHub repo and the Notoo MCP server can read and build your notes and boards — ask your assistant to make a mood board and it appears here.</p>
+            <label class="conn-field"><span>Repository</span><input id="connRepo" type="text" placeholder="yourname/notoo-sync" autocomplete="off" spellcheck="false"></label>
+            <label class="conn-field"><span>Access token</span><input id="connToken" type="password" placeholder="github_pat_…" autocomplete="off" spellcheck="false"></label>
+            <label class="conn-field"><span>File</span><input id="connPath" type="text" placeholder="notoo.json" autocomplete="off" spellcheck="false"></label>
+            <label class="conn-field"><span>Branch</span><input id="connBranch" type="text" placeholder="main" autocomplete="off" spellcheck="false"></label>
+            <div class="conn-actions">
+              <button class="conn-btn" id="connTest" data-conn>Test</button>
+              <button class="conn-btn" id="connPull" data-conn>Pull</button>
+              <button class="conn-btn primary" id="connPush" data-conn>Send</button>
+            </div>
+            <button class="set-row" id="connAutoRow" style="padding:12px 0 2px;background:none">
+              <div class="sl">Auto-sync<small>Send changes a few seconds after you stop editing</small></div>
+              <div class="switch" id="connAuto"></div>
+            </button>
+            <button class="conn-btn ghost" id="connCopy" style="margin-top:10px">Copy Claude Desktop config</button>
           </div>
         </div>
 
@@ -1723,7 +2160,7 @@ html[data-theme="dark"] .tab-create{background:var(--accent)}
             </button>
             <button class="set-row" id="rowAbout">
               <div class="si"><svg><use href="#i-info"/></svg></div>
-              <div class="sl">Notoo<small>Version 3.2 · Notes &amp; Canvas</small></div>
+              <div class="sl">Notoo<small>Version 3.7 · Notes &amp; Canvas</small></div>
               <svg class="chev"><use href="#i-right"/></svg>
             </button>
             <button class="set-row" id="rowKeys">
@@ -2009,9 +2446,9 @@ const LEGACY_NOTES = 'inkwell.notes.v1';
 const LEGACY_SET   = 'inkwell.settings.v1';
 
 const DEFAULT_SETTINGS = {
-  theme:'light', accent:'#D2703A', layout:'grid', sort:'recent',
+  theme:'light', accent:'#33472F', layout:'grid', sort:'recent',
   fontSize:16, grid:true, snap:false,
-  appFont:'Poppins', anim:'smooth', reduceMotion:false, recentSearches:[], tagFilter:''
+  appFont:'Fredoka', anim:'smooth', reduceMotion:false, recentSearches:[], tagFilter:''
 };
 
 let notes = [];
@@ -2031,6 +2468,13 @@ function loadAll(){
   try{ notes = JSON.parse(rawNotes) || []; }catch(e){ notes=[]; }
   try{ settings = Object.assign({}, DEFAULT_SETTINGS, JSON.parse(rawSet)||{}); }catch(e){ settings={...DEFAULT_SETTINGS}; }
   if(!Array.isArray(notes)) notes = [];
+  // Poppins was the old shipped default; move anyone still on it to the new one
+  // so the redesigned interface shows its intended typeface
+  if(!settings.fontMigratedV2){
+    settings.appFont = DEFAULT_SETTINGS.appFont;
+    settings.fontMigratedV2 = true;
+    saveSettings();
+  }
 }
 let saveWarned = false;
 function saveNotes(){
@@ -2039,6 +2483,7 @@ function saveNotes(){
     if(!saveWarned){ saveWarned = true; toast('Storage full — remove some images'); }
   }
   markDirty();
+  if(typeof connAutoKick === 'function') connAutoKick();
 }
 function saveSettings(){ try{ localStorage.setItem(LS_SET, JSON.stringify(settings)); }catch(e){} }
 
@@ -2411,7 +2856,7 @@ function applyFilter(arr, f){
 }
 
 function tagColor(t){
-  const palette = ['#F7E9B8','#F8DFCB','#DDE8D2','#D3E3EF','#F4D3DA','#E0D6EE','#F0DFC4','#DCE8E6'];
+  const palette = ['#C6CCAF','#F1CE90','#F5CDBC','#D89C90','#9BA37D','#E7E9D8','#E4B05E','#B9C2A0'];
   let h = 0;
   for(let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) >>> 0;
   return palette[h % palette.length];
@@ -2442,10 +2887,10 @@ function renderTagCircles(all){
     });
     return b;
   };
-  row.appendChild(mk('All tags', '', '#43291D', '\u2726', '#FFFFFF'));
+  row.appendChild(mk('All tags', '', '#33472F', '\u2726', '#E4B05E'));
   tags.forEach(t => {
     const bg = tagColor(t);
-    row.appendChild(mk(t, t, bg, t.charAt(0).toUpperCase(), '#2E1F17'));
+    row.appendChild(mk(t, t, bg, t.charAt(0).toUpperCase(), '#2C3A26'));
   });
 }
 
@@ -3089,12 +3534,17 @@ function createCanvas(){
   notes.push(n); saveNotes(); markDirty(); openCanvas(n.id, true);
 }
 
-/* home interactions */
-$('#filterChips').addEventListener('click', e=>{
-  const c = e.target.closest('.chip'); if(!c) return;
-  $$('#filterChips .chip').forEach(x=>x.classList.remove('on'));
-  c.classList.add('on'); homeFilter = c.dataset.filter; renderHome();
-});
+/* home interactions
+   (the secondary filter tab row was removed — the home list now always shows
+    everything; the search screen still offers its own filters) */
+const homeChips = $('#filterChips');
+if(homeChips){
+  homeChips.addEventListener('click', e=>{
+    const c = e.target.closest('.chip'); if(!c) return;
+    $$('#filterChips .chip').forEach(x=>x.classList.remove('on'));
+    c.classList.add('on'); homeFilter = c.dataset.filter; renderHome();
+  });
+}
 $('#btnSearchGo').addEventListener('click', ()=>{ switchTab('search'); setTimeout(()=>$('#searchInput').focus(), 400); });
 $('#clearTag').addEventListener('click', ()=>{ settings.tagFilter=''; saveSettings(); renderHome(); });
 $('#sortLink').addEventListener('click', ()=> $('#sortValue').click());
@@ -3283,7 +3733,7 @@ const SHAPE_MENU = [
 
 /* ---------------- state ---------------- */
 const cv = {
-  id:null, els:[], cam:{x:0,y:0,z:1}, bg:{color:'#3A2418', texture:'dots'}, selId:null,
+  id:null, els:[], links:[], cam:{x:0,y:0,z:1}, bg:{color:'#3A2418', texture:'dots'}, selId:null,
   tool:'select', ink:{color:'#FFFFFF', size:4},
   history:[], future:[], editing:false, isNew:false,
   drawPts:null, dragEl:null
@@ -3323,6 +3773,7 @@ function buildElDom(el, mini){
   else if(el.type === 'image'){
     const im = document.createElement('img');
     im.src = el.src; im.alt = '';
+    im.decoding = 'async';
     d.appendChild(im);
   }
   else if(el.type === 'rect' || el.type === 'rrect' || el.type === 'ellipse'){
@@ -3342,7 +3793,10 @@ function buildElDom(el, mini){
   else if(el.type === 'path'){
     const pts = el.points || [];
     const dpath = pts.map((p,i)=> (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
-    d.innerHTML = '<svg viewBox="0 0 ' + Math.max(1,el.w) + ' ' + Math.max(1,el.h) +
+    // The viewBox is pinned to the bounds the stroke was drawn in, so resizing
+    // the box stretches the drawing instead of just growing empty space.
+    const bw = Math.max(1, el.bw || el.w), bh = Math.max(1, el.bh || el.h);
+    d.innerHTML = '<svg viewBox="0 0 ' + bw + ' ' + bh +
       '" preserveAspectRatio="none"><path d="' + dpath + '" fill="none" stroke="' +
       (el.stroke || '#FFFFFF') + '" stroke-width="' + (el.strokeWidth || 4) +
       '" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -3355,10 +3809,12 @@ function refreshEl(el){
   old.replaceWith(buildElDom(el, false));
 }
 function renderWorld(){
-  world.innerHTML = '';
+  // keep the connection layer, which lives inside the world alongside elements
+  Array.from(world.querySelectorAll('.ce')).forEach(n => n.remove());
   const frag = document.createDocumentFragment();
   cv.els.forEach(el => frag.appendChild(buildElDom(el, false)));
   world.appendChild(frag);
+  renderLinks();
 }
 function elDom(id){ return world.querySelector('.ce[data-id="' + id + '"]'); }
 
@@ -3412,23 +3868,27 @@ function applyGridBg(){ if(currentScreen === 'screen-canvas') applyCanvasBg(); }
 
 /* ---------------- history ---------------- */
 function snapshot(){
-  cv.history.push(JSON.stringify(cv.els));
+  cv.history.push(JSON.stringify({ els: cv.els, links: cv.links || [] }));
   if(cv.history.length > 60) cv.history.shift();
   cv.future.length = 0;
   updateUndoBtns();
 }
-function undo(){
-  if(!cv.history.length) return;
-  cv.future.push(JSON.stringify(cv.els));
-  cv.els = JSON.parse(cv.history.pop());
+function applyHistory(raw){
+  const st = JSON.parse(raw);
+  if(Array.isArray(st)){ cv.els = st; cv.links = []; }        // pre-connections entry
+  else { cv.els = st.els || []; cv.links = st.links || []; }
   if(!cv.els.some(e=>e.id===cv.selId)) cv.selId = null;
   renderWorld(); updateSelFrame(); updateUndoBtns();
 }
+function undo(){
+  if(!cv.history.length) return;
+  cv.future.push(JSON.stringify({ els: cv.els, links: cv.links || [] }));
+  applyHistory(cv.history.pop());
+}
 function redo(){
   if(!cv.future.length) return;
-  cv.history.push(JSON.stringify(cv.els));
-  cv.els = JSON.parse(cv.future.pop());
-  renderWorld(); updateSelFrame(); updateUndoBtns();
+  cv.history.push(JSON.stringify({ els: cv.els, links: cv.links || [] }));
+  applyHistory(cv.future.pop());
 }
 function updateUndoBtns(){
   const u1 = $('#canvasUndoTop'), r1 = $('#canvasRedoTop');
@@ -3551,6 +4011,7 @@ $('#toolStrip').addEventListener('click', e=>{
   if(t === 'bg'){ openBgSheet(); return; }
   if(t === 'color'){ openColorSheet(); return; }
   setTool(t);
+  if(t === 'link'){ cv.linkFrom = null; renderLinks(); toast('Tap two items to connect them','i-link'); }
   if(t === 'text') toast('Tap the board to place text','i-type');
   if(t === 'sticky') toast('Tap the board to drop a sticky','i-sticky');
 });
@@ -3558,6 +4019,8 @@ $('#toolStrip').addEventListener('click', e=>{
 function deleteSel(){
   if(!cv.selId) return;
   snapshot();
+  const gone = cv.selId;
+  cv.links = (cv.links || []).filter(l => l.from !== gone && l.to !== gone);
   cv.els = cv.els.filter(e=>e.id !== cv.selId);
   cv.selId = null;
   renderWorld(); updateSelFrame(); updateUndoBtns();
@@ -3678,6 +4141,31 @@ function placeImages(list){
   cv.tool = 'select'; setTool('select');
   toast(list.length === 1 ? 'Image added' : list.length + ' images placed', 'i-image');
 }
+/* Shrink a picture on the way in. Board images used to be stored at full
+   resolution, so a board with a dozen of them was hundreds of megabytes of
+   live textures — that is what made drawing stutter. */
+function prepImageFile(file, maxDim, cb){
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const w = img.naturalWidth || 800, h = img.naturalHeight || 600;
+      const sc = Math.min(1, maxDim / Math.max(w, h));
+      if(sc >= 1){ cb({ src: reader.result, w, h }); return; }
+      const cw = Math.max(1, Math.round(w*sc)), ch = Math.max(1, Math.round(h*sc));
+      const cnv = document.createElement('canvas');
+      cnv.width = cw; cnv.height = ch;
+      const cx = cnv.getContext('2d');
+      cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = 'high';
+      cx.drawImage(img, 0, 0, cw, ch);
+      cb({ src: cnv.toDataURL('image/jpeg', 0.85), w: cw, h: ch });
+    };
+    img.onerror = () => cb({ src: reader.result, w: 400, h: 300 });
+    img.src = reader.result;
+  };
+  reader.onerror = () => cb(null);
+  reader.readAsDataURL(file);
+}
 $('#canvasFile').addEventListener('change', e=>{
   const files = Array.from(e.target.files || []);
   e.target.value = '';
@@ -3685,21 +4173,43 @@ $('#canvasFile').addEventListener('change', e=>{
   const out = new Array(files.length);
   let left = files.length;
   files.forEach((f, i) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      const done = () => {
-        out[i] = { src: reader.result, w: img.naturalWidth || 240, h: img.naturalHeight || 240 };
-        if(--left === 0) placeImages(out.filter(Boolean));
-      };
-      img.onload = done;
-      img.onerror = done;
-      img.src = reader.result;
-    };
-    reader.onerror = () => { out[i] = null; if(--left === 0) placeImages(out.filter(Boolean)); };
-    reader.readAsDataURL(f);
+    prepImageFile(f, 1600, res => {
+      out[i] = res;
+      if(--left === 0) placeImages(out.filter(Boolean));
+    });
   });
 });
+
+/* Re-encode the pictures already on this board at a sane size. */
+function optimiseBoardImages(){
+  const imgs = cv.els.filter(e => e.type === 'image' && e.src && e.src.length > 220000);
+  if(!imgs.length){ toast('This board is already lean','i-check'); return; }
+  let done = 0;
+  toast('Optimising ' + imgs.length + ' image' + (imgs.length>1?'s':'') + '\u2026','i-download');
+  snapshot();
+  imgs.forEach(el => {
+    const im = new Image();
+    im.onload = () => {
+      const w = im.naturalWidth, h = im.naturalHeight;
+      const sc = Math.min(1, 1600 / Math.max(w, h));
+      if(sc < 1){
+        const cw = Math.round(w*sc), ch = Math.round(h*sc);
+        const cnv = document.createElement('canvas');
+        cnv.width = cw; cnv.height = ch;
+        const cx = cnv.getContext('2d');
+        cx.imageSmoothingQuality = 'high';
+        cx.drawImage(im, 0, 0, cw, ch);
+        el.src = cnv.toDataURL('image/jpeg', 0.85);
+      }
+      if(++done === imgs.length){
+        renderWorld(); saveCanvas();
+        toast('Board optimised','i-check');
+      }
+    };
+    im.onerror = () => { if(++done === imgs.length){ renderWorld(); saveCanvas(); toast('Board optimised','i-check'); } };
+    im.src = el.src;
+  });
+}
 
 /* ---------------- long-press element actions ---------------- */
 function elementSheet(el){
@@ -3785,6 +4295,55 @@ function alignGuides(el, nx, ny){
   return { x:nx, y:ny };
 }
 
+
+/* ============================================================
+   CONNECTIONS
+   Node-editor style links between items on the board.
+   ============================================================ */
+function linkEnds(a, b){
+  const ax = a.x + a.w/2, ay = a.y + a.h/2;
+  const bx = b.x + b.w/2, by = b.y + b.h/2;
+  const dx = bx - ax, dy = by - ay;
+  const len = Math.hypot(dx, dy) || 1;
+  const ra = Math.min(a.w, a.h) * 0.44, rb = Math.min(b.w, b.h) * 0.44;
+  return { sx: ax + dx/len*ra, sy: ay + dy/len*ra, ex: bx - dx/len*rb, ey: by - dy/len*rb };
+}
+function linkCurve(a, b){
+  const p = linkEnds(a, b);
+  const mx = (p.sx + p.ex)/2 - (p.ey - p.sy) * 0.14;
+  const my = (p.sy + p.ey)/2 + (p.ex - p.sx) * 0.14;
+  p.d = 'M' + p.sx.toFixed(1) + ' ' + p.sy.toFixed(1) +
+        ' Q' + mx.toFixed(1) + ' ' + my.toFixed(1) + ' ' + p.ex.toFixed(1) + ' ' + p.ey.toFixed(1);
+  return p;
+}
+let linkRaf = 0;
+function queueLinks(){
+  if(linkRaf) return;
+  linkRaf = requestAnimationFrame(() => { linkRaf = 0; renderLinks(); });
+}
+function renderLinks(){
+  const layer = $('#linkLayer'); if(!layer) return;
+  const by = {};
+  cv.els.forEach(e => { by[e.id] = e; });
+  let html = '';
+  (cv.links || []).forEach(lk => {
+    const a = by[lk.from], b = by[lk.to];
+    if(!a || !b) return;
+    const c = linkCurve(a, b);
+    const col = lk.color || 'rgba(255,255,255,.6)';
+    const cls = 'lng' + (cv.linkSel === lk.id ? ' on' : '') +
+                (cv.linkFrom && (cv.linkFrom === lk.from || cv.linkFrom === lk.to) ? ' armed' : '');
+    html += '<g class="' + cls + '" data-link="' + lk.id + '">' +
+      '<path class="ln-hit" d="' + c.d + '"/>' +
+      '<path class="ln" d="' + c.d + '" stroke="' + col + '"/>' +
+      '<circle class="ln-dot" cx="' + c.sx.toFixed(1) + '" cy="' + c.sy.toFixed(1) + '" r="3.5" fill="' + col + '"/>' +
+      '<circle class="ln-dot" cx="' + c.ex.toFixed(1) + '" cy="' + c.ey.toFixed(1) + '" r="5" fill="' + col + '"/>' +
+    '</g>';
+  });
+  layer.innerHTML = html;
+}
+function linksOf(id){ return (cv.links || []).filter(l => l.from === id || l.to === id); }
+
 /* ---------------- pointer interaction ---------------- */
 const pointers = new Map();
 let mode = null, start = {};
@@ -3806,16 +4365,70 @@ stage.addEventListener('pointerdown', e=>{
   start.x = p.x; start.y = p.y;
   hideGuides();
 
+  // tapping an existing connection offers to remove it
+  const lnHit = e.target.closest && e.target.closest('[data-link]');
+  if(lnHit){
+    const lk = (cv.links || []).find(l => l.id === lnHit.dataset.link);
+    if(lk){
+      cv.linkSel = lk.id; renderLinks();
+      listSheet('Connection', 'Links two items on this board', [
+        { label:'Remove connection', icon:'i-trash', danger:true, onClick:()=>{
+            snapshot();
+            cv.links = cv.links.filter(l => l.id !== lk.id);
+            cv.linkSel = null; renderLinks(); saveCanvas(); toast('Connection removed','i-trash');
+        }},
+        { label:'Keep it', icon:'i-check', onClick:()=>{ cv.linkSel = null; renderLinks(); }}
+      ]);
+    }
+    mode = null; start.rect = null;
+    return;
+  }
+
+  if(cv.tool === 'link'){
+    const hitEl = e.target.closest('.ce');
+    mode = null; start.rect = null;
+    if(!hitEl){ cv.linkFrom = null; renderLinks(); toast('Pick the first item','i-link'); return; }
+    const el = cv.els.find(x => x.id === hitEl.dataset.id);
+    if(!el) return;
+    if(!cv.linkFrom){
+      cv.linkFrom = el.id; renderLinks();
+      toast('Now tap the item to connect it to','i-link');
+    } else if(cv.linkFrom === el.id){
+      cv.linkFrom = null; renderLinks(); toast('Cancelled');
+    } else {
+      const dupe = (cv.links || []).some(l =>
+        (l.from === cv.linkFrom && l.to === el.id) || (l.from === el.id && l.to === cv.linkFrom));
+      if(!dupe){
+        snapshot();
+        cv.links.push({ id:uid(), from:cv.linkFrom, to:el.id });
+        saveCanvas();
+      }
+      cv.linkFrom = null; renderLinks();
+      toast(dupe ? 'Already connected' : 'Connected', dupe ? 'i-x' : 'i-check');
+    }
+    return;
+  }
+
   if(cv.tool === 'pen'){
     mode = 'draw';
     const w = toWorld(p.x, p.y);
     cv.drawPts = [{x:w.x, y:w.y}];
+    cv.drawMin = {x:w.x, y:w.y};
+    cv.drawMax = {x:w.x, y:w.y};
     const el = { id:uid(), type:'path', x:w.x, y:w.y, w:2, h:2, rot:0,
                  points:[[0,0]], stroke:cv.ink.color, strokeWidth:cv.ink.size };
     snapshot();
     cv.els.push(el);
     cv.selId = null; selFrame.classList.remove('on');
-    world.appendChild(buildElDom(el, false));
+    const dom = buildElDom(el, false);
+    world.appendChild(dom);
+    // cache everything the hot loop needs — no DOM queries per move
+    strokeDom = dom;
+    strokeSvg = dom.firstElementChild;
+    strokePath = strokeSvg ? strokeSvg.firstElementChild : null;
+    strokeD = 'M' + w.x.toFixed(1) + ' ' + w.y.toFixed(1);
+    drawQueue.length = 0;
+    dom.classList.add('live');            // own compositor layer for the duration
     $('#canvasHint').classList.add('hide');
     cv.dragEl = el;
     return;
@@ -3871,6 +4484,19 @@ stage.addEventListener('pointermove', e=>{
   if(!pointers.has(e.pointerId)) return;
   const r = start.rect || stage.getBoundingClientRect();
   pointers.set(e.pointerId, { x: e.clientX - r.left, y: e.clientY - r.top });
+  // A frame can contain several pointer moves. The old code kept only the last
+  // one, so a quick stroke lost points and came out angular. Queue them all.
+  if(mode === 'draw'){
+    let batch = null;
+    if(e.getCoalescedEvents){ try{ batch = e.getCoalescedEvents(); }catch(_){ batch = null; } }
+    if(batch && batch.length){
+      for(let i = 0; i < batch.length; i++){
+        drawQueue.push({ x: batch[i].clientX - r.left, y: batch[i].clientY - r.top });
+      }
+    } else {
+      drawQueue.push({ x: e.clientX - r.left, y: e.clientY - r.top });
+    }
+  }
   if(pressStart){
     const q = pointers.get(e.pointerId);
     if(Math.abs(q.x - pressStart.x) > 8 || Math.abs(q.y - pressStart.y) > 8){ clearTimeout(pressTimer); pressTimer = null; pressStart = null; }
@@ -3919,29 +4545,58 @@ function applyPointerMove(){
     const d = elDom(cv.dragEl.id);
     if(d) setElTransform(cv.dragEl, d);
     updateSelFrame();
+    queueLinks();
   }
   else if(mode === 'draw' && cv.dragEl){
-    const w = toWorld(p.x, p.y);
-    const last = cv.drawPts[cv.drawPts.length-1];
-    if(last && Math.hypot(w.x-last.x, w.y-last.y) < 1.2/cv.cam.z) return;
-    cv.drawPts.push({x:w.x, y:w.y});
-    const el = cv.dragEl;
-    let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
-    cv.drawPts.forEach(q=>{ minX=Math.min(minX,q.x); minY=Math.min(minY,q.y); maxX=Math.max(maxX,q.x); maxY=Math.max(maxY,q.y); });
-    el.x = minX; el.y = minY;
-    el.w = Math.max(2, maxX-minX); el.h = Math.max(2, maxY-minY);
-    el.points = cv.drawPts.map(q=>[q.x-minX, q.y-minY]);
-    const d = elDom(el.id);
-    if(d){
-      setElTransform(el, d);
-      d.style.width = el.w+'px'; d.style.height = el.h+'px';
-      const svg = d.querySelector('svg');
-      if(svg){
-        svg.setAttribute('viewBox', '0 0 ' + el.w + ' ' + el.h);
-        svg.querySelector('path').setAttribute('d', el.points.map((q,i)=> (i?'L':'M') + q[0].toFixed(1) + ' ' + q[1].toFixed(1)).join(' '));
-      }
-    }
+    if(consumeDrawQueue()) queueStroke();
   }
+}
+
+/* One DOM write per frame, and the path string only ever grows — no per-frame
+   work proportional to how much has already been drawn. */
+let strokeRaf = 0, strokeDom = null, strokeSvg = null, strokePath = null, strokeD = '';
+const drawQueue = [];
+/* Applies every queued point. Called once per frame AND once more when the
+   finger lifts — otherwise the tail of the stroke is silently dropped and the
+   line stops short of where you released. */
+function consumeDrawQueue(){
+  const mn = cv.drawMin, mx = cv.drawMax;
+  const minStep = 0.8 / cv.cam.z;
+  let added = false;
+  for(let i = 0; i < drawQueue.length; i++){
+    const w = toWorld(drawQueue[i].x, drawQueue[i].y);
+    const last = cv.drawPts[cv.drawPts.length-1];
+    if(last && Math.hypot(w.x-last.x, w.y-last.y) < minStep) continue;
+    cv.drawPts.push({x:w.x, y:w.y});
+    if(w.x < mn.x) mn.x = w.x;
+    if(w.y < mn.y) mn.y = w.y;
+    if(w.x > mx.x) mx.x = w.x;
+    if(w.y > mx.y) mx.y = w.y;
+    strokeD += 'L' + w.x.toFixed(1) + ' ' + w.y.toFixed(1);
+    added = true;
+  }
+  drawQueue.length = 0;
+  return added;
+}
+
+function paintStroke(){
+  strokeRaf = 0;
+  const el = cv.dragEl;
+  if(!el || !strokeDom || !strokeSvg || !strokePath) return;
+  const mn = cv.drawMin;
+  el.x = mn.x; el.y = mn.y;
+  el.w = Math.max(2, cv.drawMax.x - mn.x);
+  el.h = Math.max(2, cv.drawMax.y - mn.y);
+  setElTransform(el, strokeDom);
+  strokeDom.style.width = el.w + 'px';
+  strokeDom.style.height = el.h + 'px';
+  // viewBox in world coordinates while drawing, so segments never need rewriting
+  strokeSvg.setAttribute('viewBox', mn.x + ' ' + mn.y + ' ' + el.w + ' ' + el.h);
+  strokePath.setAttribute('d', strokeD);
+}
+function queueStroke(){
+  if(strokeRaf) return;
+  strokeRaf = requestAnimationFrame(paintStroke);
 }
 
 function endPointer(e){
@@ -3950,12 +4605,23 @@ function endPointer(e){
   clearTimeout(pressTimer); pressTimer = null; pressStart = null;
 
   if(mode === 'draw' && cv.dragEl){
+    if(strokeRaf){ cancelAnimationFrame(strokeRaf); strokeRaf = 0; }
+    consumeDrawQueue();                 // don't lose the last frame's points
+    const el = cv.dragEl;
+    const mn = cv.drawMin || {x:el.x, y:el.y};
+    el.x = mn.x; el.y = mn.y;
+    el.w = Math.max(2, (cv.drawMax ? cv.drawMax.x : el.x+2) - mn.x);
+    el.h = Math.max(2, (cv.drawMax ? cv.drawMax.y : el.y+2) - mn.y);
     if(cv.drawPts && cv.drawPts.length < 2){
-      const el = cv.dragEl;
       el.w = Math.max(cv.ink.size, 4); el.h = Math.max(cv.ink.size, 4);
       el.points = [[0,0],[el.w,el.h]];
-      refreshEl(el);
+    } else {
+      // bake to element-relative coordinates once, at the end
+      el.points = cv.drawPts.map(q => [q.x - mn.x, q.y - mn.y]);
     }
+    el.bw = Math.max(1, el.w); el.bh = Math.max(1, el.h);
+    strokeDom = strokeSvg = strokePath = null; strokeD = '';
+    refreshEl(el);
     snapshot(); cv.drawPts = null;
   }
   if(mode === 'drag' && cv.dragEl && !start.moved){
@@ -3973,7 +4639,14 @@ function endPointer(e){
   cv.dragEl = null;
   if(pointers.size === 0){ mode = null; start.pinch = null; start.rect = null; }
 }
-stage.addEventListener('pointerup', endPointer);
+function endPointerQueued(e){
+  if(mode === 'draw' && cv.dragEl && start.rect){
+    const r = start.rect;
+    drawQueue.push({ x: e.clientX - r.left, y: e.clientY - r.top });
+  }
+  endPointer(e);
+}
+stage.addEventListener('pointerup', endPointerQueued);
 stage.addEventListener('pointercancel', endPointer);
 
 /* ---------------- selection handles ---------------- */
@@ -3992,15 +4665,38 @@ function handleMove(e){
     if(h === 'tr'){ nw += ddx; nh -= ddy; ny += ddy; }
     if(h === 'bl'){ nw -= ddx; nh += ddy; nx += ddx; }
     if(h === 'tl'){ nw -= ddx; nh -= ddy; nx += ddx; ny += ddy; }
-    nw = Math.max(30, nw); nh = Math.max(30, nh);
+    if(el.type === 'image'){
+      // scale proportionally so the picture is never cropped or squashed
+      const ar = Math.max(0.02, start.elW / Math.max(1, start.elH));
+      const s = Math.max(nw / Math.max(1, start.elW), nh / Math.max(1, start.elH));
+      nw = Math.max(40, start.elW * s);
+      nh = Math.max(40, start.elH * s);
+      if(h === 'tr'){ ny = start.elY + (start.elH - nh); }
+      if(h === 'bl'){ nx = start.elX + (start.elW - nw); }
+      if(h === 'tl'){ nx = start.elX + (start.elW - nw); ny = start.elY + (start.elH - nh); }
+    } else {
+      nw = Math.max(30, nw); nh = Math.max(30, nh);
+    }
     el.x = nx; el.y = ny; el.w = nw; el.h = nh;
+    queueLinks();
     const d = elDom(el.id);
     if(d){
       setElTransform(el, d);
       d.style.width = nw+'px'; d.style.height = nh+'px';
       if(el.type === 'rrect') d.style.borderRadius = Math.round(Math.min(nw,nh)*0.28) + 'px';
-      const svg = d.querySelector('svg');
-      if(svg) svg.setAttribute('viewBox', '0 0 ' + Math.max(1,nw) + ' ' + Math.max(1,nh));
+      // NOTE: deliberately no viewBox update here — shapes and pen strokes rely
+      // on a fixed viewBox plus preserveAspectRatio="none" so that the artwork
+      // scales with the box. Rewriting it made the box grow while the contents
+      // stayed the same size.
+      if(el.type === 'text' || el.type === 'sticky'){
+        // text should get bigger as the box does, not just wrap differently
+        const sw = nw / Math.max(1, start.elW);
+        const sh = nh / Math.max(1, start.elH);
+        const sc = Math.sqrt(Math.max(0.02, sw) * Math.max(0.02, sh));
+        const base = start.elFont || el.fontSize || 18;
+        el.fontSize = Math.max(6, Math.min(420, Math.round(base * sc)));
+        d.style.fontSize = el.fontSize + 'px';
+      }
     }
     updateSelFrame();
   } else {
@@ -4024,6 +4720,7 @@ selFrame.addEventListener('pointerdown', e=>{
   const p = { x: e.clientX - start.rect.left, y: e.clientY - start.rect.top };
   start.x = p.x; start.y = p.y;
   start.elX = el.x; start.elY = el.y; start.elW = el.w; start.elH = el.h;
+  start.elFont = el.fontSize;
   cv.dragEl = el;
   const type = h.dataset.h;
   if(type === 'rot'){
@@ -4093,6 +4790,8 @@ function openCanvas(id, isNew){
   if(!n) return;
   cv.id = id; cv.isNew = !!isNew;
   cv.els = n.canvas && n.canvas.els ? JSON.parse(JSON.stringify(n.canvas.els)) : [];
+  cv.links = (n.canvas && n.canvas.links) ? JSON.parse(JSON.stringify(n.canvas.links)) : [];
+  cv.linkFrom = null; cv.linkSel = null;
   cv.selId = null; cv.editing = false; cv.history = []; cv.future = []; cv.dragEl = null;
   const s = stageSize();
   cv.cam = (n.canvas && n.canvas.cam && !isNew) ? {...n.canvas.cam} : {x: s.w*0.5, y: s.h*0.45, z:1};
@@ -4112,7 +4811,7 @@ function openCanvas(id, isNew){
 function saveCanvas(){
   const n = findNote(cv.id); if(!n) return;
   n.title = ($('#canvasTitle').value || '').trim() || 'Untitled canvas';
-  n.canvas = { els: cv.els, cam: {...cv.cam}, bg: {...cv.bg} };
+  n.canvas = { els: cv.els, links: cv.links || [], cam: {...cv.cam}, bg: {...cv.bg} };
   n.updated = nowISO();
   saveNotes();
   return n;
@@ -4133,6 +4832,8 @@ $('#canvasMenu').addEventListener('click', ()=>{
     {label:'Canvas background', sub:'Colour and texture', icon:'i-bg', onClick:openBgSheet},
     {label:'Export as image', sub:'Download a PNG of the board', icon:'i-download', onClick:exportBoardPng},
     {label:'Fit board to screen', icon:'i-target', onClick:()=>$('#zFit').click()},
+    {label:'Connect two items', sub:'Draw a link between them', icon:'i-link', onClick:()=>{ setTool('link'); cv.linkFrom = null; renderLinks(); toast('Tap two items to connect them','i-link'); }},
+    {label:'Optimise board images', sub:'Shrink stored pictures', icon:'i-download', onClick:optimiseBoardImages},
     {label:'Duplicate canvas', icon:'i-copy', onClick:duplicateCanvas},
     {label:'Clear board', sub:'Remove every object', icon:'i-x', danger:true, onClick:()=>{
       if(!cv.els.length){ toast('Already empty'); return; }
@@ -4219,12 +4920,14 @@ function drawElToCtx(ctx, el, img){
     ctx.stroke();
   }
   else if(el.type === 'path' && (el.points||[]).length){
+    const bw = Math.max(1, el.bw || el.w), bh = Math.max(1, el.bh || el.h);
+    const sx = el.w / bw, sy = el.h / bh;
     ctx.beginPath();
     el.points.forEach((p,i)=>{
-      const X = el.x + p[0], Y = el.y + p[1];
+      const X = el.x + p[0]*sx, Y = el.y + p[1]*sy;
       i ? ctx.lineTo(X,Y) : ctx.moveTo(X,Y);
     });
-    ctx.lineWidth = el.strokeWidth || 4;
+    ctx.lineWidth = (el.strokeWidth || 4) * ((sx + sy) / 2);
     ctx.strokeStyle = el.stroke || '#fff';
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     ctx.stroke();
@@ -4281,6 +4984,25 @@ async function exportBoardPng(){
   }
   const imgs = {};
   for(const el of els){ if(el.type === 'image') imgs[el.id] = await loadImg(el.src); }
+  // connections first, so items sit on top of them
+  const byId = {}; els.forEach(e => { byId[e.id] = e; });
+  (cv.links || []).forEach(lk => {
+    const a = byId[lk.from], b = byId[lk.to];
+    if(!a || !b) return;
+    const c = linkEnds(a, b);
+    ctx.beginPath();
+    ctx.moveTo(c.sx, c.sy);
+    ctx.quadraticCurveTo(
+      (c.sx + c.ex)/2 - (c.ey - c.sy) * 0.14,
+      (c.sy + c.ey)/2 + (c.ex - c.sx) * 0.14,
+      c.ex, c.ey);
+    ctx.strokeStyle = ink(0.6);
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    ctx.beginPath(); ctx.arc(c.ex, c.ey, 5, 0, 6.2832);
+    ctx.fillStyle = ink(0.6); ctx.fill();
+  });
   els.forEach(el => drawElToCtx(ctx, el, imgs[el.id]));
   cnv.toBlob(b => {
     if(!b){ toast('Export failed','i-x'); return; }
@@ -4513,6 +5235,220 @@ if(artInflateSupported()){
 }
 </script><script>
 /* ============================================================
+   AI CONNECTOR
+   Keeps the app's notes in step with the same JSON document the
+   Notoo MCP server reads and writes, so an AI assistant can read
+   and build your notes and boards for you.
+   ============================================================ */
+'use strict';
+
+const CONN_DEFAULT = { repo:'', token:'', path:'notoo.json', branch:'main', auto:false, sha:null };
+let connBusy = false;
+
+function conn(){
+  if(!settings.conn) settings.conn = { ...CONN_DEFAULT };
+  return settings.conn;
+}
+function connReady(){
+  const c = conn();
+  return Boolean(c.repo && c.token && /^[\w.-]+\/[\w.-]+$/.test(c.repo));
+}
+function connHeaders(){
+  const c = conn();
+  return {
+    'Authorization': 'Bearer ' + c.token,
+    'Accept': 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28'
+  };
+}
+function connApi(){
+  const c = conn();
+  return 'https://api.github.com/repos/' + c.repo + '/contents/' + encodeURIComponent(c.path);
+}
+
+/* ---- payload ---- */
+function connSnapshot(){
+  return { app:'notoo', version:1, updated: nowISO(), notes: notes };
+}
+function connMerge(remote){
+  // newest write wins, per note id
+  const byId = new Map();
+  (remote.notes || []).forEach(n => { if(n && n.id) byId.set(n.id, n); });
+  let pulled = 0;
+  notes.forEach(local => {
+    const r = byId.get(local.id);
+    if(!r){ byId.set(local.id, local); return; }
+    const lt = Date.parse(local.updated || 0) || 0;
+    const rt = Date.parse(r.updated || 0) || 0;
+    if(rt > lt){ byId.set(local.id, r); pulled++; }
+  });
+  const merged = [...byId.values()];
+  const changed = merged.length !== notes.length || pulled > 0;
+  notes = merged;
+  return { pulled, total: merged.length, changed };
+}
+
+/* ---- network ---- */
+async function connFetchRemote(){
+  const c = conn();
+  const url = connApi() + '?ref=' + encodeURIComponent(c.branch || 'main') + '&t=' + Date.now();
+  const r = await fetch(url, { headers: connHeaders(), cache:'no-store' });
+  if(r.status === 404){ c.sha = null; return null; }
+  if(r.status === 401 || r.status === 403) throw new Error('Token rejected — check it can write to this repo');
+  if(!r.ok) throw new Error('GitHub ' + r.status);
+  const j = await r.json();
+  c.sha = j.sha;
+  const bin = atob(String(j.content || '').replace(/\s/g, ''));
+  const bytes = new Uint8Array(bin.length);
+  for(let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+async function connWriteRemote(doc){
+  const c = conn();
+  const body = JSON.stringify(doc);
+  const b64 = btoa(unescape(encodeURIComponent(body)));
+  const payload = {
+    message: 'notoo: sync from app ' + nowISO(),
+    content: b64,
+    branch: c.branch || 'main'
+  };
+  if(c.sha) payload.sha = c.sha;
+  const r = await fetch(connApi(), {
+    method:'PUT', headers: { ...connHeaders(), 'Content-Type':'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if(!r.ok){
+    const t = await r.text().catch(()=> '');
+    if(r.status === 409) throw new Error('The cloud copy changed — pull again');
+    throw new Error('GitHub ' + r.status + ' ' + t.slice(0, 90));
+  }
+  const j = await r.json();
+  if(j.content && j.content.sha) c.sha = j.content.sha;
+}
+
+/* ---- public actions ---- */
+async function connPull(quiet){
+  if(!connReady()){ if(!quiet) toast('Add your repo and token first'); return; }
+  if(connBusy) return;
+  connBusy = true; connRender();
+  try{
+    const remote = await connFetchRemote();
+    if(!remote){ if(!quiet) toast('Nothing in the cloud yet — push first'); }
+    else{
+      const res = connMerge(remote);
+      saveNotes();
+      markDirty(); renderHome(); renderTagCircles(notes.filter(n=>!n.trashed));
+      if(!quiet) toast(res.pulled ? 'Pulled ' + res.pulled + ' update' + (res.pulled>1?'s':'') : 'Already up to date');
+    }
+  }catch(e){ toast(String(e.message || e), 'i-x'); }
+  connBusy = false; connRender();
+}
+async function connPush(quiet){
+  if(!connReady()){ if(!quiet) toast('Add your repo and token first'); return; }
+  if(connBusy) return;
+  connBusy = true; connRender();
+  try{
+    await connFetchRemote().catch(()=> null);   // pick up the current sha
+    await connWriteRemote(connSnapshot());
+    saveSettings();
+    if(!quiet) toast('Sent to the cloud');
+  }catch(e){ toast(String(e.message || e), 'i-x'); }
+  connBusy = false; connRender();
+}
+async function connSync(quiet){
+  if(!connReady()) return;
+  if(connBusy) return;
+  connBusy = true; connRender();
+  try{
+    const remote = await connFetchRemote();
+    if(remote){
+      const res = connMerge(remote);
+      if(res.changed){ saveNotes(); markDirty(); renderHome(); }
+    }
+    await connWriteRemote(connSnapshot());
+    if(!quiet) toast('Synced');
+  }catch(e){ if(!quiet) toast(String(e.message || e), 'i-x'); }
+  connBusy = false; connRender();
+}
+
+/* auto-sync: debounced, only when the app is idle */
+let connAutoTimer = null;
+function connAutoKick(){
+  const c = conn();
+  if(!c.auto || !connReady()) return;
+  clearTimeout(connAutoTimer);
+  connAutoTimer = setTimeout(()=> connSync(true), 2500);
+}
+async function connTest(){
+  if(!connReady()){ toast('Add your repo and token first'); return; }
+  connBusy = true; connRender();
+  try{
+    const r = await fetch(connApi() + '?ref=' + encodeURIComponent(conn().branch || 'main'), { headers: connHeaders(), cache:'no-store' });
+    if(r.status === 401 || r.status === 403) throw new Error('Token rejected');
+    if(r.status === 404){ toast('Connected — the file will be created on first send'); conn().sha = null; }
+    else if(r.ok){ const j = await r.json(); conn().sha = j.sha; toast('Connected to ' + conn().repo); }
+    else throw new Error('GitHub ' + r.status);
+    saveSettings();
+  }catch(e){ toast(String(e.message || e), 'i-x'); }
+  connBusy = false; connRender();
+}
+
+/* ---- settings UI ---- */
+function connRender(){
+  const c = conn();
+  const set = (id, v)=>{ const el = document.getElementById(id); if(el && el.value !== v) el.value = v; };
+  set('connRepo', c.repo || '');
+  set('connToken', c.token || '');
+  set('connPath', c.path || 'notoo.json');
+  set('connBranch', c.branch || 'main');
+  const st = document.getElementById('connStatus');
+  if(st){
+    st.textContent = connBusy ? 'Working…'
+      : (connReady() ? (c.sha ? 'Linked to ' + c.repo : 'Ready — not sent yet')
+                     : 'Not connected');
+    st.className = 'conn-status' + (connReady() ? ' ok' : '');
+  }
+  const sw = document.getElementById('connAuto');
+  if(sw) sw.classList.toggle('on', !!c.auto);
+  document.querySelectorAll('[data-conn]').forEach(b=> b.disabled = connBusy || !connReady());
+}
+function connBind(){
+  const bind = (id, key) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.addEventListener('input', ()=>{ conn()[key] = el.value.trim(); saveSettings(); connRender(); });
+    el.addEventListener('change', ()=>{ conn()[key] = el.value.trim(); saveSettings(); connRender(); });
+  };
+  bind('connRepo','repo'); bind('connToken','token'); bind('connPath','path'); bind('connBranch','branch');
+  const auto = document.getElementById('connAuto');
+  if(auto) auto.addEventListener('click', ()=>{
+    const c = conn(); c.auto = !c.auto; saveSettings();
+    auto.classList.toggle('on', c.auto); connRender();
+    toast(c.auto ? 'Auto-sync on' : 'Auto-sync off');
+    if(c.auto) connAutoKick();
+  });
+  const wire = (id, fn) => { const b = document.getElementById(id); if(b) b.addEventListener('click', fn); };
+  wire('connTest', connTest);
+  wire('connPull', ()=> connPull(false));
+  wire('connPush', ()=> connPush(false));
+  wire('connCopy', ()=>{
+    const cfg = JSON.stringify({
+      mcpServers: {
+        notoo: {
+          command: 'node',
+          args: ['/full/path/to/Notoo/mcp/notoo-mcp.mjs'],
+          env: { NOTOO_GITHUB_REPO: conn().repo, NOTOO_GITHUB_TOKEN: 'YOUR_TOKEN', NOTOO_GITHUB_PATH: conn().path || 'notoo.json', NOTOO_GITHUB_BRANCH: conn().branch || 'main' }
+        }
+      }
+    }, null, 2);
+    copyText(cfg);
+    toast('Config copied — paste into Claude Desktop');
+  });
+  connRender();
+}
+</script>
+<script>
+/* ============================================================
    INKWELL — fonts · motion · palette · templates · stats
    ============================================================ */
 'use strict';
@@ -4522,6 +5458,7 @@ if(artInflateSupported()){
    ============================================================ */
 const FONTS = [
   /* --- Sans --- */
+  {n:'Fredoka',           c:'Display',    w:'400;500;600;700'},
   {n:'Poppins',           c:'Sans',       w:'400;500;600;700;800'},
   {n:'Inter',             c:'Sans',       w:'400;700'},
   {n:'Montserrat',        c:'Sans',       w:'400;700'},
@@ -5445,5 +6382,6 @@ document.addEventListener('click', e => {
   renderTemplates();
   const fc = $('#fontCountLabel');
   if(fc) fc.textContent = FONTS.length + ' fonts to choose from';
+  if(typeof connBind === 'function') connBind();
 })();
 </script>
