@@ -1252,6 +1252,7 @@ html[data-theme="dark"] .tab-create{background:var(--accent)}
 
 
 
+
 /* ============================================================
    REDESIGN LAYER
    Warm paper, botanical, hand-drawn — matches the four reference
@@ -1608,10 +1609,16 @@ html[data-theme="dark"] .conn-field input{background:var(--paper-3);color:var(--
 :root{ --app-h:100vh; }
 @supports (height:100dvh){ :root{ --app-h:100dvh; } }
 html,body{height:100%;overscroll-behavior:none}
-#stage{height:var(--app-h);min-height:100%}
-#phone{height:100%;min-height:0}
+/* Pin the stage with top/left/width/height rather than inset:0. When the soft
+   keyboard opens, Android shrinks the viewport; with `inset:0` the bottom:0
+   constraint can leave the fixed layer stuck at the shrunken height once the
+   keyboard closes, which shows as a band of background under the app. An
+   explicit height that we re-measure has no such constraint. */
+#stage{position:fixed;top:0;left:0;width:100%;height:var(--app-h);padding:0}
+#phone{width:100%;height:100%;min-height:0}
 .screen{min-height:0}
 .canvas-stage{min-height:0}
+#screen-canvas .canvas-stage{height:100%}
 @media (min-width:520px){ #phone{height:min(880px,calc(var(--app-h) - 44px))} }
 
 </style>
@@ -2186,7 +2193,7 @@ html,body{height:100%;overscroll-behavior:none}
             </button>
             <button class="set-row" id="rowAbout">
               <div class="si"><svg><use href="#i-info"/></svg></div>
-              <div class="sl">Notoo<small>Version 3.7.1 · Notes &amp; Canvas</small></div>
+              <div class="sl">Notoo<small>Version 3.7.2 · Notes &amp; Canvas</small></div>
               <svg class="chev"><use href="#i-right"/></svg>
             </button>
             <button class="set-row" id="rowKeys">
@@ -6460,14 +6467,23 @@ function applyViewport(){
   const h = Math.round((vv && vv.height) || window.innerHeight || document.documentElement.clientHeight || 0);
   if(h > 0) document.documentElement.style.setProperty('--app-h', h + 'px');
 }
+/* After the keyboard closes, some Android WebViews restore the viewport a
+   beat late (or need a nudge), so re-measure a few times over the next second. */
+function settleViewport(){
+  applyViewport();
+  [40, 90, 180, 320, 560, 900].forEach(ms => setTimeout(applyViewport, ms));
+}
 window.addEventListener('resize', applyViewport);
-window.addEventListener('orientationchange', ()=> setTimeout(applyViewport, 150));
+window.addEventListener('orientationchange', ()=> setTimeout(settleViewport, 150));
 if(window.visualViewport){
-  window.visualViewport.addEventListener('resize', applyViewport);
+  window.visualViewport.addEventListener('resize', settleViewport);
   window.visualViewport.addEventListener('scroll', applyViewport);
 }
+document.addEventListener('focusin', ()=> setTimeout(applyViewport, 40));
+document.addEventListener('focusout', settleViewport);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) settleViewport(); });
+window.addEventListener('pageshow', settleViewport);
 applyViewport();
-document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) applyViewport(); });
 
 (function featureBoot(){
   loadFonts();

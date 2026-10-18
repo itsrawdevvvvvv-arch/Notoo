@@ -26,6 +26,7 @@ import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.graphics.Rect;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -53,6 +54,7 @@ public class MainActivity extends Activity {
     private String pendingBase64Name, pendingBase64Mime, pendingBase64Data;
     private TextToSpeech tts;
     private boolean ttsReady = false;
+    private int lastVisibleHeight = 0;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -79,10 +81,30 @@ public class MainActivity extends Activity {
         web.setWebViewClient(new WebViewClient());
         web.setWebChromeClient(new Chrome());
         web.addJavascriptInterface(new Bridge(), "NotooNative");
-        web.setBackgroundColor(0xFFC99A5B);
+        web.setBackgroundColor(0xFFF6EEDA);
         web.loadUrl("file:///android_asset/index.html");
 
         setContentView(web);
+
+        // Some devices leave the WebView sized for the soft keyboard after it
+        // closes, which shows as a band of background under the app. Whenever
+        // the visible frame changes, re-lay out and ask the page to re-measure.
+        web.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+            if (web == null) return;
+            Rect r = new Rect();
+            web.getWindowVisibleDisplayFrame(r);
+            int h = r.height();
+            if (h > 0 && h != lastVisibleHeight) {
+                lastVisibleHeight = h;
+                web.requestLayout();
+                web.post(() -> {
+                    if (web != null) {
+                        web.evaluateJavascript(
+                            "window.dispatchEvent(new Event('resize'));", null);
+                    }
+                });
+            }
+        });
 
         tts = new TextToSpeech(this, status -> {
             ttsReady = (status == TextToSpeech.SUCCESS);
