@@ -5,7 +5,7 @@ import '../data/notes_store.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/motion.dart';
 import '../widgets/note_card.dart';
-import 'editor_screen.dart';
+import 'canvas_editor_screen.dart';
 
 /// Trash — opened from Settings (no longer a bottom-bar tab).
 class TrashScreen extends StatelessWidget {
@@ -43,8 +43,7 @@ class TrashScreen extends StatelessWidget {
                   note: notes[i],
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
-                        builder: (_) =>
-                            EditorScreen(note: notes[i], readOnly: true)),
+                        builder: (_) => CanvasEditorScreen(note: notes[i])),
                   ),
                   trailing: TextButton(
                     onPressed: () => store.restoreNote(notes[i]),

@@ -10,7 +10,6 @@ import '../widgets/motion.dart';
 import '../widgets/note_card.dart';
 import '../widgets/ui.dart';
 import 'canvas_editor_screen.dart';
-import 'editor_screen.dart';
 import 'search_screen.dart';
 import 'settings_screen.dart';
 
@@ -180,11 +179,7 @@ class _Grid extends StatelessWidget {
   Widget _card(BuildContext context, Note n) => NoteCard(
         note: n,
         onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => n.kind == NoteKind.canvas
-                ? CanvasEditorScreen(note: n)
-                : EditorScreen(note: n),
-          ),
+          MaterialPageRoute(builder: (_) => CanvasEditorScreen(note: n)),
         ),
       );
 }

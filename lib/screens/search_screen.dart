@@ -7,7 +7,6 @@ import '../theme/app_colors.dart';
 import '../widgets/decor.dart';
 import '../widgets/ui.dart';
 import 'canvas_editor_screen.dart';
-import 'editor_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -113,9 +112,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     size: 18, color: AppColors.ink),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => n.kind == NoteKind.canvas
-                        ? CanvasEditorScreen(note: n)
-                        : EditorScreen(note: n),
+                    builder: (_) => CanvasEditorScreen(note: n),
                   ),
                 ),
               ),

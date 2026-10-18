@@ -5,7 +5,7 @@ import '../data/notes_store.dart';
 import '../models/note_folder.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/note_card.dart';
-import 'editor_screen.dart';
+import 'canvas_editor_screen.dart';
 
 /// Notes inside a single folder.
 class FolderNotesScreen extends StatelessWidget {
@@ -33,7 +33,7 @@ class FolderNotesScreen extends StatelessWidget {
                 note: notes[i],
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
-                      builder: (_) => EditorScreen(note: notes[i])),
+                      builder: (_) => CanvasEditorScreen(note: notes[i])),
                 ),
               ),
             ),

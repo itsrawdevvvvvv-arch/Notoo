@@ -7,7 +7,6 @@ import '../widgets/decor.dart';
 import '../widgets/motion.dart';
 import '../widgets/ui.dart';
 import 'canvas_editor_screen.dart';
-import 'editor_screen.dart';
 import 'search_screen.dart';
 
 class ArchiveScreen extends StatelessWidget {
@@ -64,9 +63,7 @@ class ArchiveScreen extends StatelessWidget {
                       ),
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => notes[i].kind.name == 'canvas'
-                              ? CanvasEditorScreen(note: notes[i])
-                              : EditorScreen(note: notes[i]),
+                          builder: (_) => CanvasEditorScreen(note: notes[i]),
                         ),
                       ),
                     ),

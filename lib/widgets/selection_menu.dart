@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 
 /// A compact, pill-shaped text-selection menu (cut / copy / paste / select
-/// all). Icon-only so it stays small, and draggable so you can move it out of
-/// the way.
+/// all). Small icon + label so it stays narrow, and draggable so you can move
+/// it wherever it suits you.
 class MovableSelectionMenu extends StatefulWidget {
   const MovableSelectionMenu({super.key, required this.editorState});
 
@@ -28,28 +28,27 @@ class _MovableSelectionMenuState extends State<MovableSelectionMenu> {
         child: GestureDetector(
           onPanUpdate: (d) => setState(() => _drag += d.delta),
           child: Material(
-            elevation: 6,
-            shadowColor: Colors.black.withValues(alpha: 0.22),
+            elevation: 8,
+            shadowColor: Colors.black.withValues(alpha: 0.20),
             color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(26),
+            borderRadius: BorderRadius.circular(24),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(26),
-                border:
-                    Border.all(color: theme.dividerColor.withValues(alpha: 0.7)),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                    color: theme.dividerColor.withValues(alpha: 0.8)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                    padding: const EdgeInsets.only(left: 2, right: 4),
                     child: Icon(Icons.drag_indicator,
-                        size: 15,
+                        size: 16,
                         color: theme.colorScheme.onSurfaceVariant),
                   ),
-                  for (final item in items)
-                    _PillButton(item: item, theme: theme),
+                  for (final item in items) _MenuItem(item: item, theme: theme),
                 ],
               ),
             ),
@@ -60,26 +59,33 @@ class _MovableSelectionMenuState extends State<MovableSelectionMenu> {
   }
 }
 
-class _PillButton extends StatelessWidget {
-  const _PillButton({required this.item, required this.theme});
+class _MenuItem extends StatelessWidget {
+  const _MenuItem({required this.item, required this.theme});
 
   final ContextMenuButtonItem item;
   final ThemeData theme;
 
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: _labelFor(item.type),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: item.onPressed,
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Icon(
-            _iconFor(item.type),
-            size: 18,
-            color: theme.colorScheme.primary,
-          ),
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: item.onPressed,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(_iconFor(item.type), size: 17, color: theme.colorScheme.primary),
+            const SizedBox(height: 1),
+            Text(
+              _labelFor(item.type),
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -109,7 +115,7 @@ class _PillButton extends StatelessWidget {
       case ContextMenuButtonType.paste:
         return 'Paste';
       case ContextMenuButtonType.selectAll:
-        return 'Select all';
+        return 'All';
       default:
         return '';
     }

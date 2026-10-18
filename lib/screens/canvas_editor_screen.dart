@@ -41,6 +41,18 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     super.initState();
     _note = widget.note;
     _els.addAll(_note.canvas);
+    // Any older, text-only note is carried onto the canvas as a text block,
+    // so every note opens as a canvas from now on.
+    if (_els.isEmpty && _note.plainText.trim().isNotEmpty) {
+      _els.add(CanvasElement.create(ElementKind.text)
+        ..text = _note.plainText.trim()
+        ..x = 40
+        ..y = 60
+        ..w = 300
+        ..h = 220
+        ..fontSize = 16);
+    }
+    _note.kind = NoteKind.canvas;
   }
 
   @override
