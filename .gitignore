@@ -1,32 +1,9 @@
-# Flutter / Dart
-.dart_tool/
-.packages
-.pub-cache/
-.pub/
-build/
-.flutter-plugins
-.flutter-plugins-dependencies
+# Android build output
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
 *.iml
 .idea/
-.vscode/
-
-# Android
-android/.gradle/
-android/local.properties
-android/key.properties
-*.jks
-*.keystore
-
-# Misc
-.DS_Store
-*.log
-
-# Fonts are fetched at build time by tool/fetch_fonts.py
-assets/fonts/
-
-# Stickers are fetched at build time by tool/fetch_stickers.py
-assets/stickers/
-
-# Python bytecode
-__pycache__/
-*.pyc
+.gradle/
+out/
