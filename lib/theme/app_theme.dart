@@ -90,6 +90,7 @@ class AppTheme {
       primary: seed,
       surface: surfaceC,
       onSurface: inkC,
+      onSurfaceVariant: softC,
       outlineVariant: lineC,
     );
 
@@ -109,13 +110,12 @@ class AppTheme {
       dividerTheme: DividerThemeData(color: lineC, thickness: 1, space: 1),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: seed,
-        foregroundColor: light ? Colors.white : const Color(0xFF12110F),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20)),
+        foregroundColor: Colors.white,
+        shape: const CircleBorder(),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: surfaceC,
-        indicatorColor: seed.withValues(alpha: 0.18),
+        backgroundColor: light ? AppColors.navBg : surfaceC,
+        indicatorColor: Colors.transparent,
         elevation: 0,
       ),
       pageTransitionsTheme: const PageTransitionsTheme(

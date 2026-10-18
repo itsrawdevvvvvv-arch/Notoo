@@ -4,7 +4,7 @@ import '../models/note.dart';
 import '../theme/app_colors.dart';
 import 'motion.dart';
 
-/// A single note card, used across Home / Archive / Trash / Search.
+/// The mockup's note card: title, preview, and a coloured dot + date.
 class NoteCard extends StatelessWidget {
   const NoteCard({
     super.key,
@@ -12,12 +12,14 @@ class NoteCard extends StatelessWidget {
     required this.onTap,
     this.trailing,
     this.tagLabel,
+    this.accent,
   });
 
   final Note note;
   final VoidCallback onTap;
   final Widget? trailing;
   final String? tagLabel;
+  final Color? accent;
 
   @override
   Widget build(BuildContext context) {
@@ -25,20 +27,20 @@ class NoteCard extends StatelessWidget {
     final tinted = note.colorIndex != null;
     final cardColor =
         tinted ? AppColors.pastel(note.colorIndex) : theme.colorScheme.surface;
-    final titleColor = tinted ? AppColors.ink : theme.colorScheme.onSurface;
-    final bodyColor = tinted ? AppColors.inkSoft : theme.colorScheme.onSurfaceVariant;
+    final dot = accent ??
+        (note.colorIndex != null
+            ? theme.colorScheme.primary
+            : AppColors.grey);
 
     return Bouncy(
       onTap: onTap,
       child: Container(
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: cardColor,
-          borderRadius: BorderRadius.circular(20),
-          border: tinted
-              ? null
-              : Border.all(color: theme.dividerColor.withValues(alpha: 0.6)),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: AppShadows.card,
         ),
-        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -49,58 +51,54 @@ class NoteCard extends StatelessWidget {
                     note.displayTitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: titleColor,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
                     ),
                   ),
                 ),
                 if (note.isPinned)
-                  Icon(Icons.push_pin, size: 15, color: theme.colorScheme.primary),
-                if (trailing != null) ...[
-                  const SizedBox(width: 6),
-                  trailing!,
-                ],
+                  Icon(Icons.push_pin,
+                      size: 13, color: theme.colorScheme.primary),
+                if (trailing != null) trailing!,
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
               note.preview,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: bodyColor,
-                height: 1.35,
+                fontSize: 10.5,
+                color: theme.colorScheme.onSurfaceVariant,
+                height: 1.45,
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             Row(
               children: [
-                if (tagLabel != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: tinted
-                          ? Colors.white.withValues(alpha: 0.55)
-                          : theme.colorScheme.primary.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      tagLabel!,
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        color: tinted
-                            ? AppColors.ink
-                            : theme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
+                Container(
+                  width: 7,
+                  height: 7,
+                  decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+                ),
+                if (tagLabel != null) ...[
+                  const SizedBox(width: 5),
+                  Text(
+                    tagLabel!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontSize: 9.5,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
+                ],
                 const Spacer(),
                 Text(
                   _date(note.updatedAt),
-                  style: TextStyle(fontSize: 10.5, color: bodyColor),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 9.5,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),

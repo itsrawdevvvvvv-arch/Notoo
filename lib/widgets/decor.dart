@@ -11,21 +11,21 @@ String? doodleAsset(int index) {
   return kDoodleStickers[index % kDoodleStickers.length]['asset'];
 }
 
-/// A slowly drifting field of soft organic blobs, drawn behind content.
-class BlobBackground extends StatefulWidget {
-  const BlobBackground({super.key, required this.child});
+/// A soft field of drifting blobs, like the mockup's background splotches.
+class BlobField extends StatefulWidget {
+  const BlobField({super.key, required this.child});
 
   final Widget child;
 
   @override
-  State<BlobBackground> createState() => _BlobBackgroundState();
+  State<BlobField> createState() => _BlobFieldState();
 }
 
-class _BlobBackgroundState extends State<BlobBackground>
+class _BlobFieldState extends State<BlobField>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
-    duration: const Duration(seconds: 14),
+    duration: const Duration(seconds: 12),
   )..repeat();
 
   @override
@@ -36,14 +36,13 @@ class _BlobBackgroundState extends State<BlobBackground>
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
     return Stack(
       children: [
         Positioned.fill(
           child: AnimatedBuilder(
             animation: _c,
             builder: (_, __) => CustomPaint(
-              painter: _BlobPainter(t: _c.value, accent: primary),
+              painter: _BlobPainter(t: _c.value),
             ),
           ),
         ),
@@ -54,100 +53,158 @@ class _BlobBackgroundState extends State<BlobBackground>
 }
 
 class _BlobPainter extends CustomPainter {
-  _BlobPainter({required this.t, required this.accent});
-
+  _BlobPainter({required this.t});
   final double t;
-  final Color accent;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
     final a = t * 2 * math.pi;
-
     void blob(Offset c, double r, Color color, double phase) {
-      final p = Paint()..color = color.withValues(alpha: 0.18);
-      final dx = math.sin(a + phase) * 10;
-      final dy = math.cos(a + phase) * 10;
-      canvas.drawCircle(c.translate(dx, dy), r, p);
+      final p = Paint()
+        ..color = color.withValues(alpha: 0.5)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+      canvas.drawCircle(
+        c.translate(math.sin(a + phase) * 6, math.cos(a + phase) * 6),
+        r,
+        p,
+      );
     }
 
-    blob(Offset(w * 0.02, h * 0.03), w * 0.22, accent, 0);
-    blob(Offset(w * 0.98, h * 0.12), w * 0.18, AppColors.pastels[1], 1.2);
-    blob(Offset(w * 0.9, h * 0.62), w * 0.24, AppColors.pastels[2], 2.1);
-    blob(Offset(w * 0.05, h * 0.92), w * 0.2, AppColors.pastels[0], 3.0);
-    blob(Offset(w * 0.5, h * 1.02), w * 0.16, AppColors.pastels[5], 4.2);
+    blob(Offset(-size.width * 0.08, size.height * 0.10), 45,
+        const Color(0xFFB9CFB8), 0);
+    blob(Offset(size.width * 1.02, size.height * 0.72), 35,
+        const Color(0xFFF6C9B0), 1.6);
+    blob(Offset(size.width * 0.95, size.height * 0.18), 26,
+        const Color(0xFFDCE6F2), 2.8);
   }
 
   @override
-  bool shouldRepaint(_BlobPainter old) => old.t != t || old.accent != accent;
+  bool shouldRepaint(_BlobPainter old) => old.t != t;
 }
 
-/// A doodle placed at a slight rotation — an editorial accent.
+/// The mockup's hand-written margin note (Caveat, tilted, gently swaying).
+class StickyNote extends StatelessWidget {
+  const StickyNote({
+    super.key,
+    required this.text,
+    this.rotation = 0.052,
+    this.color = AppColors.sticky,
+  });
+
+  final String text;
+  final double rotation;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return _Sway(
+      child: Transform.rotate(
+        angle: rotation,
+        child: Container(
+          width: 96,
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontFamily: 'Caveat',
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+              height: 1.05,
+              color: AppColors.ink,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Handwriting in Caveat, for the little in-app captions.
+class HandText extends StatelessWidget {
+  const HandText(
+    this.text, {
+    super.key,
+    this.size = 15,
+    this.color,
+    this.align = TextAlign.left,
+  });
+
+  final String text;
+  final double size;
+  final Color? color;
+  final TextAlign align;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      textAlign: align,
+      style: TextStyle(
+        fontFamily: 'Caveat',
+        fontWeight: FontWeight.w600,
+        fontSize: size,
+        color: color ?? Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+    );
+  }
+}
+
+/// A doodle placed at a slight rotation.
 class Doodle extends StatelessWidget {
   const Doodle({
     super.key,
     required this.asset,
     this.size = 64,
     this.rotation = 0,
-    this.opacity = 1,
   });
 
   final String asset;
   final double size;
   final double rotation;
-  final double opacity;
 
   @override
   Widget build(BuildContext context) {
-    return Opacity(
-      opacity: opacity,
-      child: Transform.rotate(
-        angle: rotation,
-        child: Image.asset(asset, width: size, height: size,
-            fit: BoxFit.contain),
-      ),
+    return Transform.rotate(
+      angle: rotation,
+      child:
+          Image.asset(asset, width: size, height: size, fit: BoxFit.contain),
     );
   }
 }
 
-/// A small handwritten "sticky note" accent, like the mockup's margin notes.
-class StickyNote extends StatelessWidget {
-  const StickyNote({
-    super.key,
-    required this.text,
-    this.rotation = 0.05,
-    this.color,
-  });
+class _Sway extends StatefulWidget {
+  const _Sway({required this.child});
+  final Widget child;
 
-  final String text;
-  final double rotation;
-  final Color? color;
+  @override
+  State<_Sway> createState() => _SwayState();
+}
+
+class _SwayState extends State<_Sway> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 4),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Transform.rotate(
-      angle: rotation,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: color ?? AppColors.pastels[3],
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontFamily: 'Caveat',
-            fontSize: 17,
-            height: 1.1,
-            fontWeight: FontWeight.w600,
-            color: theme.brightness == Brightness.dark
-                ? AppColors.ink
-                : AppColors.ink,
-          ),
-        ),
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (_, child) => Transform.translate(
+        offset: Offset(0, -2.5 * _c.value),
+        child: child,
       ),
+      child: widget.child,
     );
   }
 }

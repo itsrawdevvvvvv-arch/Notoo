@@ -9,6 +9,7 @@ import '../theme/app_fonts.dart';
 import '../theme/app_theme.dart';
 import '../theme/patterns.dart';
 import '../widgets/motion.dart';
+import '../widgets/ui.dart';
 import 'trash_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -20,260 +21,268 @@ class SettingsScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(
+        title: const Text('Settings', style: TextStyle(fontSize: 17)),
+      ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 40),
         children: [
-          // ---------- Your name ----------
-          const _SectionTitle('Your name'),
-          TextFormField(
-            initialValue: settings.userName,
-            textCapitalization: TextCapitalization.words,
-            decoration: InputDecoration(
-              hintText: 'friend',
-              filled: true,
-              fillColor: theme.colorScheme.surface,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide.none,
-              ),
-            ),
-            onFieldSubmitted: settings.setUserName,
-          ),
-          const SizedBox(height: 22),
-
-          // ---------- Appearance ----------
-          const _SectionTitle('Appearance'),
+          // Profile
           Row(
             children: [
-              for (final a in Appearance.values)
-                Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: _Choice(
-                    label: _appearanceLabel(a),
-                    selected: settings.appearance == a,
-                    onTap: () => settings.setAppearance(a),
-                  ),
+              Container(
+                width: 42,
+                height: 42,
+                decoration: const BoxDecoration(
+                  color: AppColors.greenLight,
+                  shape: BoxShape.circle,
                 ),
-            ],
-          ),
-          const SizedBox(height: 22),
-
-          // ---------- Accent colour ----------
-          _SectionTitle('Accent colour · ${settings.accent.name}'),
-          _AccentGrid(settings: settings),
-          const SizedBox(height: 22),
-
-          // ---------- Font ----------
-          const _SectionTitle('Font size'),
-          Row(
-            children: [
-              const Text('A', style: TextStyle(fontSize: 12)),
+                child: Icon(Icons.person_outline,
+                    color: theme.colorScheme.primary),
+              ),
+              const SizedBox(width: 10),
               Expanded(
-                child: Slider(
-                  value: settings.fontScale,
-                  min: 0.85,
-                  max: 1.4,
-                  divisions: 11,
-                  label: '${(settings.fontScale * 100).round()}%',
-                  onChanged: settings.setFontScale,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(settings.userName,
+                        style: const TextStyle(
+                            fontSize: 12.5, fontWeight: FontWeight.w600)),
+                    Text('A little space for every thought.',
+                        style: TextStyle(
+                            fontSize: 10.5,
+                            color: theme.colorScheme.onSurfaceVariant)),
+                  ],
                 ),
               ),
-              const Text('A', style: TextStyle(fontSize: 20)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          _SectionTitle('Font · ${settings.fontFamily}'),
-          SizedBox(
-            height: 132,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: kFontFamilies.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (_, i) {
-                final f = kFontFamilies[i];
-                final selected = settings.fontFamily == f;
-                return GestureDetector(
-                  onTap: () => settings.setFontFamily(f),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    width: 128,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? theme.colorScheme.primary.withValues(alpha: 0.14)
-                          : theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: selected
-                            ? theme.colorScheme.primary
-                            : theme.dividerColor,
-                        width: selected ? 1.6 : 1,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          f,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontFamily: f == 'System' ? null : f,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          'Aa Bb 123',
-                          style: TextStyle(
-                            fontFamily: f == 'System' ? null : f,
-                            fontSize: 18,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 22),
-
-          // ---------- Writing pad ----------
-          const _SectionTitle('Writing pad background'),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              for (var i = 0; i < AppColors.papers.length; i++)
-                _PaperSwatch(
-                  index: i,
-                  selected: settings.editorPaperIndex == i,
-                  onTap: () => settings.setEditorPaperIndex(i),
-                ),
             ],
           ),
           const SizedBox(height: 14),
-          const _SectionTitle('Writing pad pattern'),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              for (var i = 0; i < PaperPattern.values.length; i++)
-                _PatternSwatch(
-                  index: i,
-                  selected: settings.paperPatternIndex == i,
-                  onTap: () => settings.setPaperPatternIndex(i),
+
+          _Set(title: 'Your name', children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: TextFormField(
+                initialValue: settings.userName,
+                textCapitalization: TextCapitalization.words,
+                decoration: InputDecoration(
+                  hintText: 'friend',
+                  filled: true,
+                  fillColor: theme.colorScheme.surface,
+                  isDense: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
-            ],
-          ),
-          const SizedBox(height: 22),
+                onFieldSubmitted: settings.setUserName,
+              ),
+            ),
+          ]),
 
-          // ---------- View ----------
-          const _SectionTitle('Home layout'),
-          Row(
-            children: [
-              _Choice(
-                label: 'Grid',
-                selected: settings.viewMode == ViewMode.grid,
-                onTap: () => settings.setViewMode(ViewMode.grid),
+          _Set(title: 'Appearance', children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Wrap(
+                spacing: 6,
+                children: [
+                  for (final a in Appearance.values)
+                    _Seg(
+                      label: _appearanceLabel(a),
+                      on: settings.appearance == a,
+                      onTap: () => settings.setAppearance(a),
+                    ),
+                ],
               ),
-              const SizedBox(width: 10),
-              _Choice(
-                label: 'List',
-                selected: settings.viewMode == ViewMode.list,
-                onTap: () => settings.setViewMode(ViewMode.list),
+            ),
+            _Row(
+              label: 'Accent colour',
+              value: settings.accent.name,
+            ),
+            _AccentGrid(settings: settings),
+            _Row(label: 'Font size', value: '${(settings.fontScale * 100).round()}%'),
+            Slider(
+              value: settings.fontScale,
+              min: 0.85,
+              max: 1.4,
+              divisions: 11,
+              onChanged: settings.setFontScale,
+            ),
+            _Row(label: 'Font type', value: settings.fontFamily),
+            SizedBox(
+              height: 92,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.only(bottom: 8),
+                itemCount: kFontFamilies.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (_, i) {
+                  final f = kFontFamilies[i];
+                  final on = settings.fontFamily == f;
+                  return GestureDetector(
+                    onTap: () => settings.setFontFamily(f),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      width: 104,
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: on
+                            ? AppColors.greenLight
+                            : theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: on ? theme.colorScheme.primary : theme.dividerColor,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(f,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontFamily: f == 'System' ? null : f,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600)),
+                          const Spacer(),
+                          Text('Aa Bb',
+                              style: TextStyle(
+                                  fontFamily: f == 'System' ? null : f,
+                                  fontSize: 16)),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
-            ],
-          ),
-          const SizedBox(height: 22),
+            ),
+          ]),
 
-          // ---------- Export ----------
-          const _SectionTitle('Default export format'),
-          Row(
-            children: [
-              _Choice(
-                label: 'PDF',
-                selected: settings.exportFormat == ExportFormat.pdf,
-                onTap: () => settings.setExportFormat(ExportFormat.pdf),
+          _Set(title: 'View', children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Wrap(
+                spacing: 6,
+                children: [
+                  _Seg(
+                    label: 'Grid',
+                    on: settings.viewMode == ViewMode.grid,
+                    onTap: () => settings.setViewMode(ViewMode.grid),
+                  ),
+                  _Seg(
+                    label: 'List',
+                    on: settings.viewMode == ViewMode.list,
+                    onTap: () => settings.setViewMode(ViewMode.list),
+                  ),
+                ],
               ),
-              const SizedBox(width: 10),
-              _Choice(
-                label: '.txt',
-                selected: settings.exportFormat == ExportFormat.txt,
-                onTap: () => settings.setExportFormat(ExportFormat.txt),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Wrap(
+                spacing: 6,
+                children: [
+                  _Seg(
+                    label: 'Export PDF',
+                    on: settings.exportFormat == ExportFormat.pdf,
+                    onTap: () => settings.setExportFormat(ExportFormat.pdf),
+                  ),
+                  _Seg(
+                    label: 'Export .txt',
+                    on: settings.exportFormat == ExportFormat.txt,
+                    onTap: () => settings.setExportFormat(ExportFormat.txt),
+                  ),
+                ],
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          const _ExportAllTile(),
-          const SizedBox(height: 22),
+            ),
+          ]),
 
-          // ---------- Trash ----------
-          const _SectionTitle('Trash'),
-          Card(
-            elevation: 0,
-            color: theme.colorScheme.surface,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14)),
-            child: ListTile(
-              leading: const Icon(Icons.delete_outline),
-              title: const Text('Open trash'),
-              subtitle: const Text('Restore or permanently delete notes'),
-              trailing: const Icon(Icons.chevron_right),
+          _Set(title: 'Writing pad', children: [
+            _Row(label: 'Background', value: AppColors.paperNames[settings.editorPaperIndex]),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                for (var i = 0; i < AppColors.papers.length; i++)
+                  _PaperSwatch(
+                    index: i,
+                    selected: settings.editorPaperIndex == i,
+                    onTap: () => settings.setEditorPaperIndex(i),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            _Row(label: 'Pattern', value: kPaperPatternNames[settings.paperPatternIndex]),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                for (var i = 0; i < PaperPattern.values.length; i++)
+                  _PatternSwatch(
+                    index: i,
+                    selected: settings.paperPatternIndex == i,
+                    onTap: () => settings.setPaperPatternIndex(i),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ]),
+
+          _Set(title: 'Storage & Backup', children: [
+            _Row(
+              label: 'Export all as PDF',
+              value: '›',
+              onTap: () => _exportAll(context, ExportFormat.pdf),
+            ),
+            _Row(
+              label: 'Export all as .txt',
+              value: '›',
+              onTap: () => _exportAll(context, ExportFormat.txt),
+            ),
+            _Row(
+              label: 'Trash',
+              value: '›',
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const TrashScreen()),
               ),
             ),
-          ),
-          const SizedBox(height: 22),
+          ]),
 
-          // ---------- Privacy ----------
-          const _SectionTitle('Privacy'),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.lock_outline, color: theme.colorScheme.primary),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Local-only storage',
-                          style: TextStyle(fontWeight: FontWeight.w700)),
-                      SizedBox(height: 2),
-                      Text(
-                        'Your notes live on this device only. Notoo does not '
-                        'collect or send anything anywhere.',
-                        style: TextStyle(fontSize: 12, height: 1.35),
-                      ),
-                    ],
+          _Set(title: 'Privacy', children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('No internet usage',
+                            style: TextStyle(fontSize: 11.5)),
+                        Text('Your data stays on your device.',
+                            style: TextStyle(
+                                fontSize: 10.5,
+                                color: AppColors.inkSoft)),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  _Toggle(value: true, onChanged: (_) {}),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 22),
+          ]),
 
-          // ---------- Credits ----------
-          const _SectionTitle('Credits & licences'),
-          Text(
-            'Sticker art: Open Doodles by Pablo Stanley (CC0, public domain); '
-            'Twemoji graphics (CC BY 4.0). Fonts: Google Fonts (SIL Open Font '
-            'License). Notoo itself is MIT licensed.',
-            style: TextStyle(
-              fontSize: 12,
-              height: 1.45,
-              color: theme.colorScheme.onSurfaceVariant,
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              'Sticker art: Open Doodles by Pablo Stanley (CC0); Twemoji '
+              'graphics (CC BY 4.0). Fonts: Google Fonts (SIL OFL). '
+              'Notoo is MIT licensed.',
+              style: TextStyle(
+                fontSize: 11,
+                height: 1.45,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         ],
@@ -291,180 +300,9 @@ class SettingsScreen extends StatelessWidget {
         return 'AMOLED';
     }
   }
-}
 
-class _AccentGrid extends StatelessWidget {
-  const _AccentGrid({required this.settings});
-  final SettingsStore settings;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final light = AppTheme.isLight(settings.appearance);
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: [
-        for (var i = 0; i < kAccents.length; i++)
-          Bouncy(
-            onTap: () => settings.setAccentIndex(i),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: light ? kAccents[i].light : kAccents[i].dark,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: settings.accentIndex == i
-                      ? theme.colorScheme.onSurface
-                      : Colors.transparent,
-                  width: 2.5,
-                ),
-              ),
-              child: settings.accentIndex == i
-                  ? const Icon(Icons.check, size: 18, color: Colors.white)
-                  : null,
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _PatternSwatch extends StatelessWidget {
-  const _PatternSwatch({
-    required this.index,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final int index;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: selected
-                    ? theme.colorScheme.primary
-                    : theme.dividerColor,
-                width: selected ? 2.5 : 1,
-              ),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: PaperBackground(
-                pattern: PaperPattern.values[index],
-                color: theme.colorScheme.surface,
-                child: const SizedBox.expand(),
-              ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(kPaperPatternNames[index],
-              style: TextStyle(
-                  fontSize: 10.5,
-                  color: theme.colorScheme.onSurfaceVariant)),
-        ],
-      ),
-    );
-  }
-}
-
-class _PaperSwatch extends StatelessWidget {
-  const _PaperSwatch({
-    required this.index,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final int index;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = AppColors.papers[index];
-    final onColor = ThemeData.estimateBrightnessForColor(color) ==
-            Brightness.dark
-        ? Colors.white
-        : const Color(0xFF2E2A24);
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: selected ? theme.colorScheme.primary : theme.dividerColor,
-                width: selected ? 2.5 : 1,
-              ),
-            ),
-            child: Center(
-              child: Text('Aa',
-                  style: TextStyle(
-                      color: onColor, fontWeight: FontWeight.w700)),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(AppColors.paperNames[index],
-              style: TextStyle(
-                  fontSize: 10.5, color: theme.colorScheme.onSurfaceVariant)),
-        ],
-      ),
-    );
-  }
-}
-
-class _ExportAllTile extends StatelessWidget {
-  const _ExportAllTile();
-
-  @override
-  Widget build(BuildContext context) {
+  Future<void> _exportAll(BuildContext context, ExportFormat format) async {
     final notes = context.read<NotesStore>();
-    final theme = Theme.of(context);
-    return Card(
-      elevation: 0,
-      color: theme.colorScheme.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: Column(
-        children: [
-          ListTile(
-            leading: const Icon(Icons.picture_as_pdf_outlined),
-            title: const Text('Export all notes as PDF'),
-            onTap: () => _run(context, notes, ExportFormat.pdf),
-          ),
-          Divider(height: 1, color: theme.dividerColor),
-          ListTile(
-            leading: const Icon(Icons.description_outlined),
-            title: const Text('Export all notes as .txt'),
-            onTap: () => _run(context, notes, ExportFormat.txt),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _run(
-      BuildContext context, NotesStore notes, ExportFormat format) async {
     final messenger = ScaffoldMessenger.of(context);
     final all = notes.notes.where((n) => !n.isTrashed).toList();
     if (all.isEmpty) {
@@ -482,36 +320,79 @@ class _ExportAllTile extends StatelessWidget {
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.text);
-  final String text;
+class _Set extends StatelessWidget {
+  const _Set({required this.title, required this.children});
+  final String title;
+  final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-          letterSpacing: 0.3,
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppShadows.card,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 4),
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          ),
+          ...children,
+        ],
+      ),
+    );
+  }
+}
+
+class _Row extends StatelessWidget {
+  const _Row({required this.label, required this.value, this.onTap});
+  final String label;
+  final String value;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 9),
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: theme.dividerColor)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(label, style: const TextStyle(fontSize: 11.5)),
+            ),
+            Text(value,
+                style: TextStyle(
+                    fontSize: 10.5,
+                    color: theme.colorScheme.onSurfaceVariant)),
+          ],
         ),
       ),
     );
   }
 }
 
-class _Choice extends StatelessWidget {
-  const _Choice({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
+class _Seg extends StatelessWidget {
+  const _Seg({required this.label, required this.on, required this.onTap});
   final String label;
-  final bool selected;
+  final bool on;
   final VoidCallback onTap;
 
   @override
@@ -521,26 +402,192 @@ class _Choice extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: selected
-              ? theme.colorScheme.primary.withValues(alpha: 0.15)
-              : Colors.transparent,
-          border: Border.all(
-              color: selected
-                  ? theme.colorScheme.primary
-                  : theme.dividerColor),
-          borderRadius: BorderRadius.circular(12),
+          color: on ? AppColors.greenLight : AppColors.chip,
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Text(
           label,
           style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: selected
-                ? theme.colorScheme.primary
-                : theme.colorScheme.onSurfaceVariant,
+            fontSize: 10.5,
+            fontWeight: on ? FontWeight.w600 : FontWeight.w500,
+            color: on ? theme.colorScheme.primary : theme.colorScheme.onSurface,
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _Toggle extends StatelessWidget {
+  const _Toggle({required this.value, required this.onChanged});
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: () => onChanged(!value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        width: 34,
+        height: 20,
+        decoration: BoxDecoration(
+          color: value ? theme.colorScheme.primary : AppColors.grey,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: AnimatedAlign(
+          duration: const Duration(milliseconds: 220),
+          alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            margin: const EdgeInsets.all(2),
+            width: 16,
+            height: 16,
+            decoration: const BoxDecoration(
+                color: Colors.white, shape: BoxShape.circle),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AccentGrid extends StatelessWidget {
+  const _AccentGrid({required this.settings});
+  final SettingsStore settings;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final light = AppTheme.isLight(settings.appearance);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: [
+          for (var i = 0; i < kAccents.length; i++)
+            Bouncy(
+              onTap: () => settings.setAccentIndex(i),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: light ? kAccents[i].light : kAccents[i].dark,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: settings.accentIndex == i
+                        ? theme.colorScheme.onSurface
+                        : Colors.transparent,
+                    width: 2.5,
+                  ),
+                ),
+                child: settings.accentIndex == i
+                    ? const Icon(Icons.check, size: 16, color: Colors.white)
+                    : null,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PaperSwatch extends StatelessWidget {
+  const _PaperSwatch({
+    required this.index,
+    required this.selected,
+    required this.onTap,
+  });
+  final int index;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = AppColors.papers[index];
+    final onColor = ThemeData.estimateBrightnessForColor(color) ==
+            Brightness.dark
+        ? Colors.white
+        : AppColors.ink;
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: selected ? theme.colorScheme.primary : theme.dividerColor,
+                width: selected ? 2.5 : 1,
+              ),
+            ),
+            child: Center(
+              child: Text('Aa',
+                  style: TextStyle(
+                      color: onColor, fontWeight: FontWeight.w700)),
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(AppColors.paperNames[index],
+              style: TextStyle(
+                  fontSize: 9.5, color: theme.colorScheme.onSurfaceVariant)),
+        ],
+      ),
+    );
+  }
+}
+
+class _PatternSwatch extends StatelessWidget {
+  const _PatternSwatch({
+    required this.index,
+    required this.selected,
+    required this.onTap,
+  });
+  final int index;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: selected ? theme.colorScheme.primary : theme.dividerColor,
+                width: selected ? 2.5 : 1,
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: PaperBackground(
+                pattern: PaperPattern.values[index],
+                color: theme.colorScheme.surface,
+                child: const SizedBox.expand(),
+              ),
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(kPaperPatternNames[index],
+              style: TextStyle(
+                  fontSize: 9.5, color: theme.colorScheme.onSurfaceVariant)),
+        ],
       ),
     );
   }

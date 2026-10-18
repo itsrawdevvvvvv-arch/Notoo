@@ -4,8 +4,9 @@ import 'package:provider/provider.dart';
 import '../data/notes_store.dart';
 import '../models/note_tag.dart';
 import '../theme/app_colors.dart';
-import '../widgets/empty_state.dart';
+import '../widgets/decor.dart';
 import '../widgets/motion.dart';
+import '../widgets/ui.dart';
 
 class TagsScreen extends StatelessWidget {
   const TagsScreen({super.key});
@@ -15,67 +16,58 @@ class TagsScreen extends StatelessWidget {
     final store = context.watch<NotesStore>();
 
     return SafeArea(
+      bottom: false,
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 8, 8),
+            padding: const EdgeInsets.fromLTRB(16, 10, 8, 4),
             child: Row(
               children: [
                 const Text('Tags',
-                    style: TextStyle(
-                        fontSize: 24, fontWeight: FontWeight.w800)),
+                    style:
+                        TextStyle(fontSize: 19, fontWeight: FontWeight.w600)),
                 const Spacer(),
                 IconButton(
                   onPressed: () => _createTag(context),
-                  icon: const Icon(Icons.add, size: 26),
+                  icon: const Icon(Icons.add, size: 22),
                 ),
               ],
             ),
           ),
           Expanded(
-            child: store.tags.isEmpty
-                ? const EmptyState(
-                    icon: Icons.sell_outlined,
-                    title: 'No tags yet',
-                    subtitle: 'Add tags to find your notes faster.',
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
-                    itemCount: store.tags.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (_, i) {
-                      final t = store.tags[i];
-                      return RiseIn(
-                        index: i,
-                        child: Material(
-                          color: Theme.of(context).colorScheme.surface,
-                          borderRadius: BorderRadius.circular(16),
-                          child: ListTile(
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16)),
-                            leading: Container(
-                              width: 16,
-                              height: 16,
-                              decoration: BoxDecoration(
-                                color: AppColors.pastel(t.colorIndex),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            title: Text(t.name,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w700)),
-                            trailing: Text('${store.notesWithTag(t.id)}',
-                                style: TextStyle(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
-                                    fontWeight: FontWeight.w600)),
-                            onLongPress: () => _tagMenu(context, t),
-                          ),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 110),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: HandText('Tag it so you can find it later',
+                      size: 16, align: TextAlign.center),
+                ),
+                const SizedBox(height: 8),
+                if (store.tags.isEmpty)
+                  HandText('No tags yet — tap + to add one.',
+                      size: 16, align: TextAlign.center),
+                for (var i = 0; i < store.tags.length; i++)
+                  RiseIn(
+                    index: i,
+                    child: NotooRow(
+                      title: store.tags[i].name,
+                      badgeColor: Colors.transparent,
+                      badge: const SizedBox.shrink(),
+                      leadingDot: AppColors.pastel(store.tags[i].colorIndex),
+                      trailing: Text(
+                        '${store.notesWithTag(store.tags[i].id)}  ›',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
-                      );
-                    },
+                      ),
+                      onTap: () {},
+                      onLongPress: () => _tagMenu(context, store.tags[i]),
+                    ),
                   ),
+              ],
+            ),
           ),
         ],
       ),
@@ -97,12 +89,10 @@ class TagsScreen extends StatelessWidget {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel')),
+              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           FilledButton(
-            onPressed: () => Navigator.pop(ctx, controller.text),
-            child: const Text('Create'),
-          ),
+              onPressed: () => Navigator.pop(ctx, controller.text),
+              child: const Text('Create')),
         ],
       ),
     );

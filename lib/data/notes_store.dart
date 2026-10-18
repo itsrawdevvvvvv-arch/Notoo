@@ -123,8 +123,8 @@ class NotesStore extends ChangeNotifier {
 
   // ---------- Mutations ----------
 
-  Future<Note> addNote({String? folderId}) async {
-    final note = Note.create()..folderId = folderId;
+  Future<Note> addNote({String? folderId, NoteKind kind = NoteKind.canvas}) async {
+    final note = Note.create(kind: kind)..folderId = folderId;
     notes.add(note);
     await _save();
     notifyListeners();
